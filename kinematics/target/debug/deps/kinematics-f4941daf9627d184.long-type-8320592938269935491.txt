@@ -1,0 +1,1 @@
+for<'a> fn(&'a nalgebra::base::matrix::Matrix<_, nalgebra::base::dimension::Const<_>, nalgebra::base::dimension::Const<1>, nalgebra::base::array_storage::ArrayStorage<_, _, 1>>) -> _ {nalgebra_glm::length::<_, _>}

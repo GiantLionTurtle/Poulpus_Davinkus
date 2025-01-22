@@ -1,9 +1,10 @@
 from PyQt6.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtGui import QPixmap, QPainter
+from PyQt6.QtCore import Qt
 import sys
 
 #Class pour upload une image
-class ImageUploader(QWidget):
+class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
@@ -13,7 +14,7 @@ class ImageUploader(QWidget):
         self.image_label = QLabel("En attente d'une image", self)
         self.image_label.setScaledContents(True)
         #Voir size avec Vidieu/Théo
-        self.image_label.setFixedSize(800, 600) 
+        self.image_label.setFixedSize(400, 600) 
 
         # Bounton pour upload, pas comme ça dans le vrai UI, mais bien en attendent que le reste soit fait
         self.upload_button = QPushButton("Upload Image", self)
@@ -31,13 +32,39 @@ class ImageUploader(QWidget):
             self, "Open Image File", "", "Images (*.png *.jpg *.jpeg *.bmp *.gif)"
         )
         if file_path:
-            # Montrer image
+            # Load the image
             pixmap = QPixmap(file_path)
-            self.image_label.setPixmap(pixmap.scaled(self.image_label.size()))
+            if not pixmap.isNull():
+                # Scale the image while keeping its aspect ratio
+                scaled_pixmap = pixmap.scaled(
+                    self.image_label.width(),
+                    self.image_label.height(),
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+
+                # Create a new pixmap with the label's exact size
+                final_pixmap = QPixmap(self.image_label.size())
+                final_pixmap.fill(Qt.GlobalColor.transparent)
+
+                # Center the scaled image within the final pixmap
+                painter = QPainter(final_pixmap)
+                x_offset = (self.image_label.width() - scaled_pixmap.width()) // 2
+                y_offset = (self.image_label.height() - scaled_pixmap.height()) // 2
+                painter.drawPixmap(x_offset, y_offset, scaled_pixmap)
+                painter.end()
+
+                # Display the final pixmap
+                self.image_label.setPixmap(final_pixmap)
+            else:
+                self.image_label.setText("Failed to load image!")
+
+            #Scaledpixmap = pixmap.scaled(self.image_label.width(), self.image_label.height(), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            #self.image_label.setPixmap(Scaledpixmap)
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    uploader = ImageUploader()
+    uploader = MainWindow()
     uploader.show()
     sys.exit(app.exec())

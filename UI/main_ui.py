@@ -14,6 +14,7 @@ class MainWindow(QWidget):
 
     def initUI(self):
         self.setWindowTitle("Poulpus Davinkus")
+        self.setFixedSize(1200, 800)
         self.image_label = QLabel("En attente d'une image", self)
         self.image_label.setScaledContents(True)
         #Voir size avec Vidieu/Théo
@@ -42,7 +43,7 @@ class MainWindow(QWidget):
             qImg = convertCvImageToQtImage(cv_img)
             pixmap = QPixmap.fromImage(qImg)
             if not pixmap.isNull():
-                # Scale the image while keeping its aspect ratio
+                # Garde le aspect ratio
                 scaled_pixmap = pixmap.scaled(
                     self.image_label.width(),
                     self.image_label.height(),
@@ -50,11 +51,11 @@ class MainWindow(QWidget):
                     Qt.TransformationMode.SmoothTransformation,
                 )
 
-                # Create a new pixmap with the label's exact size
+                # Mettre le vrai size de l'image en premier
                 final_pixmap = QPixmap(self.image_label.size())
                 final_pixmap.fill(Qt.GlobalColor.transparent)
 
-                # Center the scaled image within the final pixmap
+                # Permet de fill les cotées avec du blanc pour que l'image ne soit pas déformer
                 painter = QPainter(final_pixmap)
                 x_offset = (self.image_label.width() - scaled_pixmap.width()) // 2
                 y_offset = (self.image_label.height() - scaled_pixmap.height()) // 2

@@ -1,6 +1,6 @@
-from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QWidget, QGridLayout, QVBoxLayout, QPushButton, QHBoxLayout
-from PyQt6.QtGui import QPixmap, QPainter, QPen, QColor
-from PyQt6.QtCore import Qt, QSize, QPoint
+from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QGridLayout, QWidget, QHBoxLayout
+from PyQt6.QtGui import QPixmap, QPainter, QPen, QColor, QIcon
+from PyQt6.QtCore import Qt, QSize
 import sys
 
 class Window(QMainWindow):
@@ -19,13 +19,13 @@ class Window(QMainWindow):
         # Grid layout to center the canvas
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0) 
+        layout.setSpacing(0)
         central_widget.setLayout(layout)
 
         self.label = QLabel()
 
         # Create the canvas
-        self.canvas = QPixmap(QSize(400, 400))
+        self.canvas = QPixmap(400, 400)
         self.canvas.fill(QColor("white"))
         self.label.setPixmap(self.canvas)
 
@@ -36,50 +36,42 @@ class Window(QMainWindow):
         layout.setColumnStretch(0, 1)
         layout.setColumnStretch(2, 1)
 
-        self.pen = QPen()
-        self.pen.setColor(QColor("black"))
+        self.pen = QPen(QColor("black"))
         self.pen.setWidth(6)
         self.pen.setCapStyle(Qt.PenCapStyle.RoundCap)
 
+        # Function to generate colored icons
+        def create_color_icon(color, size=40):
+            pixmap = QPixmap(size, size)
+            pixmap.fill(QColor(color))
+            return QIcon(pixmap)
+
+        # Button container
         buttonContainer = QWidget()
         buttonLayout = QHBoxLayout()
 
-        redColor = QPushButton("Rouge")
-        blueColor = QPushButton("Bleu")
-        greenColor = QPushButton("Vert")
-        yellowColor = QPushButton("Jaune")
-        
-        redColor.setFixedSize(50,50)
-        blueColor.setFixedSize(50,50)
-        greenColor.setFixedSize(50,50)
-        yellowColor.setFixedSize(50,50)
+        colors = {
+            "Rouge": "red",
+            "Bleu": "cyan",
+            "Vert": "green",
+            "Jaune": "yellow",
+            "Noir": "black",
+            "Mauve": "magenta",
+            "Bleu fonce": "blue",
+            "Gris": "gray",
+            "Blanc": "white"
+        }
 
-        redColor.clicked.connect(self.switchToRed)
-        blueColor.clicked.connect(self.switchToBlue)
-        greenColor.clicked.connect(self.switchToGreen)
-        yellowColor.clicked.connect(self.switchToYellow)
-
-        buttonLayout.addWidget(redColor)
-        buttonLayout.addWidget(blueColor)
-        buttonLayout.addWidget(greenColor)
-        buttonLayout.addWidget(yellowColor)
+        for name, color in colors.items():
+            button = QPushButton()
+            button.setIcon(create_color_icon(color))
+            button.setIconSize(QSize(40, 40))
+            button.setFixedSize(50, 50)
+            button.clicked.connect(lambda checked, c=color: self.pen.setColor(QColor(c)))
+            buttonLayout.addWidget(button)
 
         buttonContainer.setLayout(buttonLayout)
-
         layout.addWidget(buttonContainer, 0, 1)
-
-    def switchToRed(self):
-        self.pen.setColor(QColor("red"))
-    
-    def switchToBlue(self):
-        self.pen.setColor(QColor("cyan"))
-    
-    def switchToGreen(self):
-        self.pen.setColor(QColor("green"))
-    
-    def switchToYellow(self):
-        self.pen.setColor(QColor("yellow"))
-
 
     def getCanvasPos(self, event):
         return self.label.mapFromParent(event.pos())
@@ -87,7 +79,7 @@ class Window(QMainWindow):
     def mouseMoveEvent(self, event):
         position = self.getCanvasPos(event)
         painter = QPainter(self.canvas)
-        painter.setPen(self.pen) 
+        painter.setPen(self.pen)
 
         if self.previousPoint:
             painter.drawLine(self.previousPoint, position)

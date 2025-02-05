@@ -1,7 +1,10 @@
 from PyQt6.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog
-from PyQt6.QtGui import QPixmap, QPainter
+from PyQt6.QtGui import QPixmap, QPainter, QImage
 from PyQt6.QtCore import Qt
+from manip_image import ManipImage
+import cv2 as cv
 import sys
+import os
 
 #Class pour upload une image
 class MainWindow(QWidget):
@@ -27,13 +30,17 @@ class MainWindow(QWidget):
         self.setLayout(layout)
 
     def upload_image(self):
-        file_dialog = QFileDialog(self)
-        file_path, _ = file_dialog.getOpenFileName(
-            self, "Open Image File", "", "Images (*.png *.jpg *.jpeg *.bmp *.gif)"
-        )
+        #file_dialog = QFileDialog(self)
+        #file_path, _ = file_dialog.getOpenFileName(
+        #    self, "Open Image File", "", "Images (*.png *.jpg *.jpeg *.bmp *.gif)"
+        #)
+        file_path = os.path.expanduser("~/Documents/School/S4/Projet/lesun.jpg")
         if file_path:
-            # Load the image
+            # Load the image and convert it to a QPixmap from a cv image (numpy array)
             pixmap = QPixmap(file_path)
+            cv_img = ManipImage(pixmap).getCvImage(file_path)
+            qImg = convertCvImageToQtImage(cv_img)
+            pixmap = QPixmap.fromImage(qImg)
             if not pixmap.isNull():
                 # Scale the image while keeping its aspect ratio
                 scaled_pixmap = pixmap.scaled(
@@ -55,13 +62,16 @@ class MainWindow(QWidget):
                 painter.end()
 
                 # Display the final pixmap
-                self.image_label.setPixmap(final_pixmap)
+                self.image_label.setPixmap(final_pixmap)        
             else:
                 self.image_label.setText("Failed to load image!")
 
-            #Scaledpixmap = pixmap.scaled(self.image_label.width(), self.image_label.height(), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-            #self.image_label.setPixmap(Scaledpixmap)
-
+def convertCvImageToQtImage(cv_img):
+    height, width = cv_img.shape[:2]
+    cv_img = cv.cvtColor(cv_img, cv.COLOR_BGR2RGB)
+    bytesPerLine = 3 * width
+    qImg = QImage(cv_img.data, width, height, bytesPerLine, QImage.Format.Format_RGB888)
+    return qImg
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

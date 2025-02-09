@@ -29,7 +29,7 @@ class Vector3d:
     return Vector3d(-self.x, -self.y, -self.z)
 
   def cross(self, other):
-    return Vector3d(self.y*other.z-self.z*other.y, self.x*other.z-self.z*other.x, self.x*other.y-self.y*other.x)
+    return Vector3d(self.y * other.z - self.z * other.y, self.z * other.x - self.x * other.z, self.x * other.y - self.y * other.x)
 
 class Actuator:
   def __init__(self, start: Vector3d, end: Vector3d):
@@ -53,7 +53,8 @@ class Actuator:
     return Actuator(self.start.plus(dir_norm.times(start_trim)), self.end.minus(dir_norm.times(end_trim)))
 
   def to_str(self) -> str:
-    return "min_x:{}\nmin_y:{}\nmin_z:{}\nmax_x:{}\nmax_y:{}\nmax_z:{}".format(self.start.x, self.start.y, self.start.z, self.end.x, self.end.y, self.end.z)
+    return "min_x:{}\nmin_y:{}\nmin_z:{}\nmax_x:{}\nmax_y:{}\nmax_z:{}\nposition_endstop:{}\nposition_max:{}\n".\
+            format(self.start.x, self.start.y, self.start.z, self.end.x, self.end.y, self.end.z, 0, self.length())
 
   def plot(self, ax, param):
     ax.plot([self.start.x, self.end.x], [self.start.y, self.end.y], [self.start.z, self.end.z], param)
@@ -70,14 +71,20 @@ class ConvDelta:
     # Ideal virtual actuators
     self.ide_act_a = Actuator(Vector3d(-base/2.0, -inscribed_radius, height), Vector3d(0.0, 0.0, height-pyramid_height))
     self.ide_act_b = Actuator(Vector3d(base/2.0, -inscribed_radius, height), Vector3d(0.0, 0.0, height-pyramid_height))
-    self.ide_act_c = Actuator(Vector3d(0.0, inscribed_radius, height), Vector3d(0.0, 0.0, height-pyramid_height))
+    self.ide_act_c = Actuator(Vector3d(0.0, circumscribed_radius, height), Vector3d(0.0, 0.0, height-pyramid_height))
+
+    print("lengths={}, {}, {}".format(self.ide_act_a.length(), self.ide_act_b.length(), self.ide_act_c.length()))
 
 
+    down = Vector3d(0.0, 0.0, -1.0)
+
+    side = self.ide_act_c.direction().cross(down)
+    print("side={}, {}, {}".format(side.x, side.y, side.z))
     # # Offseted actuators by the carriage offset
     down = Vector3d(0.0, 0.0, -1.0)
-    act_a = self.ide_act_a.offset(self.ide_act_a.direction().cross(self.ide_act_a.direction().cross(down)).normalize().times(disttoactuator))
-    act_b = self.ide_act_b.offset(self.ide_act_b.direction().cross(self.ide_act_b.direction().cross(down)).normalize().times(disttoactuator))
-    act_c = self.ide_act_c.offset(self.ide_act_c.direction().cross(self.ide_act_c.direction().cross(down)).normalize().times(disttoactuator))
+    act_a = self.ide_act_a.offset(self.ide_act_a.direction().cross(self.ide_act_a.direction().cross(down)).normalize().times(-disttoactuator))
+    act_b = self.ide_act_b.offset(self.ide_act_b.direction().cross(self.ide_act_b.direction().cross(down)).normalize().times(-disttoactuator))
+    act_c = self.ide_act_c.offset(self.ide_act_c.direction().cross(self.ide_act_c.direction().cross(down)).normalize().times(-disttoactuator))
 
     # # Trim the endstops as the carriages cannot go to either end of the pyramid
     self.act_a = act_a.trim(startexclusion, endexclusion)

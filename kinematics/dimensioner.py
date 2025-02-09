@@ -66,21 +66,12 @@ class ConvDelta:
 
     pyramid_height = math.tan(math.radians(angle)) * circumscribed_radius
 
-    print("height={}\npyramid_height={}\ndiff={}".format(height, pyramid_height, height-pyramid_height))
-
     # Ideal virtual actuators
     self.ide_act_a = Actuator(Vector3d(-base/2.0, -inscribed_radius, height), Vector3d(0.0, 0.0, height-pyramid_height))
     self.ide_act_b = Actuator(Vector3d(base/2.0, -inscribed_radius, height), Vector3d(0.0, 0.0, height-pyramid_height))
     self.ide_act_c = Actuator(Vector3d(0.0, circumscribed_radius, height), Vector3d(0.0, 0.0, height-pyramid_height))
 
-    print("lengths={}, {}, {}".format(self.ide_act_a.length(), self.ide_act_b.length(), self.ide_act_c.length()))
-
-
-    down = Vector3d(0.0, 0.0, -1.0)
-
-    side = self.ide_act_c.direction().cross(down)
-    print("side={}, {}, {}".format(side.x, side.y, side.z))
-    # # Offseted actuators by the carriage offset
+    # Offseted actuators by the carriage offset
     down = Vector3d(0.0, 0.0, -1.0)
     act_a = self.ide_act_a.offset(self.ide_act_a.direction().cross(self.ide_act_a.direction().cross(down)).normalize().times(-disttoactuator))
     act_b = self.ide_act_b.offset(self.ide_act_b.direction().cross(self.ide_act_b.direction().cross(down)).normalize().times(-disttoactuator))

@@ -15,8 +15,7 @@ class ManipImage:
     def imageAnalysis(self,file_path, stampDiameter=None, threshold=None):
         try:
             self.image = cv.imread(file_path, cv.IMREAD_GRAYSCALE)
-            print(self.image.data)
-            print(self.image.shape)
+            
             return self.image
         except Exception as e:
             print(f"Error occured while trying to analyze the image: {e}")

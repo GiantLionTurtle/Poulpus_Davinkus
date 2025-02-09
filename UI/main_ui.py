@@ -39,7 +39,8 @@ class MainWindow(QWidget):
         if file_path:
             # Load the image and convert it to a QPixmap from a cv image (numpy array)
             pixmap = QPixmap(file_path)
-            cv_img = ManipImage(pixmap).getCvImage(file_path)
+            cv_img = ManipImage(file_path)
+            cv_img = cv_img.setCvImage()
             qImg = convertCvImageToQtImage(cv_img)
             pixmap = QPixmap.fromImage(qImg)
             if not pixmap.isNull():
@@ -75,7 +76,15 @@ def convertCvImageToQtImage(cv_img):
     return qImg
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    uploader = MainWindow()
-    uploader.show()
-    sys.exit(app.exec())
+    # app = QApplication(sys.argv)
+    # uploader = MainWindow()
+    # uploader.show()
+    # sys.exit(app.exec())
+    filepath = os.path.expanduser("~/Documents/School/S4/Projet/heart.png")
+    output_path = os.path.expanduser("~/Documents/School/S4/Projet/output.png")
+    output_path2 = os.path.expanduser("~/Documents/School/S4/Projet/gcode.txt")
+    cv_img = ManipImage(filepath)
+    cv_img.load_image()
+    cv_img.analyze_image()
+    cv_img.draw_circles(output_path)
+    cv_img.convert_gcode(output_path2)

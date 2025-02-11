@@ -42,7 +42,7 @@ class MainWindow(QWidget):
         )
         #file_path = os.path.expanduser("~/Documents/School/S4/Projet/lesun.jpg")
         if file_path:
-            # Load the image and convert it to a QPixmap from a cv image (numpy array))
+            # Load the image and convert it to a QPixmap from a cv image (numpy array)) test
             #pixmap = QPixmap(file_path)
             cv_img = ManipImage(file_path=file_path)
             cv_img = cv_img.setCvImage()

@@ -22,6 +22,7 @@ class ManipImage:
             # qimage = QPixmap.toImage(pixmap)
             # return self._convertQtImageToCvImage(qimage)
             print("A developper")
+            print("test")
         except Exception as e:
             print(f"Error occured as e:{e}")
 

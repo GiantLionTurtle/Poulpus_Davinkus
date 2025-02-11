@@ -17,7 +17,7 @@ class Window(QMainWindow):
         self.current_color = QColor("black")
         self.previousPoint = None
 
-        # Main container 
+        # Main container for widgets
         central_widget = QWidget(self)
         self.setCentralWidget(central_widget)
         

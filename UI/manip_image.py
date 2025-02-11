@@ -13,20 +13,25 @@ class ManipImage:
         self.circle_radius = circle_radius
         self.circles = []
 
-    def _convertPixmapToCvImage(self, pixmap):
+    def _convertPixmapToCvImage(self, pixmap:QPixmap) -> np.ndarray:
         try:
-            qimage = QPixmap.toImage(pixmap)
-            return self._convertQtImageToCvImage(qimage)
+            # image = []
+            # for pixel in pixmap.trueMatrix(,pixmap.width(),pixmap.height()):
+            #     image.append(pixel)
+            # return np.array(image)
+            # qimage = QPixmap.toImage(pixmap)
+            # return self._convertQtImageToCvImage(qimage)
+            print("A developper")
         except Exception as e:
             print(f"Error occured as e:{e}")
 
-    def _convertQtImageToCvImage(self, qimage):
+    def _convertQtImageToCvImage(self, qimage: QImage) -> np.ndarray:
         try:
-            image = QImage.convertToFormat(QImage.Format.Format_RGB32)
-            width, height = QImage.size(image)
-            ptr = QImage.bits(image)
-            cv_img = np.array(ptr).reshape(height, width, 4)
-            return cv_img
+            # image = []
+            # for pixel in qimage.pixelColor():
+            #     image.append([pixel.red(), pixel.green(), pixel.blue()])
+            # return np.array(image)
+            print("A developper")
         except Exception as e:
             print(f"Error occured as e:{e}")
     

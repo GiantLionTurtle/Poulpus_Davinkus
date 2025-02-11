@@ -36,14 +36,14 @@ class MainWindow(QWidget):
         self.setLayout(layout)
 
     def upload_image(self):
-        # file_dialog = QFileDialog(self)
-        # file_path, _ = file_dialog.getOpenFileName(
-        #    self, "Open Image File", "", "Images (*.png *.jpg *.jpeg *.bmp *.gif)"
-        # )
-        file_path = os.path.expanduser("~/Documents/School/S4/Projet/lesun.jpg")
+        file_dialog = QFileDialog(self)
+        file_path, _ = file_dialog.getOpenFileName(
+           self, "Open Image File", "", "Images (*.png *.jpg *.jpeg *.bmp *.gif)"
+        )
+        #file_path = os.path.expanduser("~/Documents/School/S4/Projet/lesun.jpg")
         if file_path:
             # Load the image and convert it to a QPixmap from a cv image (numpy array))
-            pixmap = QPixmap(file_path)
+            #pixmap = QPixmap(file_path)
             cv_img = ManipImage(file_path=file_path)
             cv_img = cv_img.setCvImage()
             qImg = convertCvImageToQtImage(cv_img)
@@ -77,7 +77,7 @@ class MainWindow(QWidget):
     def test_analysis(self):
         output_path = os.path.expanduser("~/Documents/School/S4/Projet/output.png")
         output_path2 = os.path.expanduser("~/Documents/School/S4/Projet/gcode.txt")
-        cv_img = ManipImage(self.final_pixmap)
+        cv_img = ManipImage(pixmap=self.final_pixmap)
         cv_img.load_image()
         cv_img.analyze_image()
         cv_img.draw_circles(output_path)

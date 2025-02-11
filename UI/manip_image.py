@@ -3,11 +3,10 @@ import cv2 as cv
 from PIL import Image, ImageDraw
 
 class ManipImage:
-    def __init__(self, file_path, circle_radius=10, threshold=128):
+    def __init__(self, file_path, circle_radius=10):
         self.image = None
         self.file_path = file_path
         self.circle_radius = circle_radius
-        self.threshold = threshold
         self.circles = []
 
     def setCvImage(self):

@@ -24,22 +24,27 @@ class MainWindow(QWidget):
         self.upload_button = QPushButton("Upload Image", self)
         self.upload_button.clicked.connect(self.upload_image)
 
+        #Button to test image analysis from pixmap
+        self.test_analysis_button = QPushButton("Test", self)
+        self.test_analysis_button.clicked.connect(self.test_analysis)
+
         # Ajouter les widgets
         layout = QVBoxLayout()
         layout.addWidget(self.image_label)
         layout.addWidget(self.upload_button)
+        layout.addWidget(self.test_analysis_button)
         self.setLayout(layout)
 
     def upload_image(self):
-        #file_dialog = QFileDialog(self)
-        #file_path, _ = file_dialog.getOpenFileName(
+        # file_dialog = QFileDialog(self)
+        # file_path, _ = file_dialog.getOpenFileName(
         #    self, "Open Image File", "", "Images (*.png *.jpg *.jpeg *.bmp *.gif)"
-        #)
+        # )
         file_path = os.path.expanduser("~/Documents/School/S4/Projet/lesun.jpg")
         if file_path:
-            # Load the image and convert it to a QPixmap from a cv image (numpy array)
+            # Load the image and convert it to a QPixmap from a cv image (numpy array))
             pixmap = QPixmap(file_path)
-            cv_img = ManipImage(file_path)
+            cv_img = ManipImage(file_path=file_path)
             cv_img = cv_img.setCvImage()
             qImg = convertCvImageToQtImage(cv_img)
             pixmap = QPixmap.fromImage(qImg)
@@ -64,11 +69,21 @@ class MainWindow(QWidget):
                 painter.end()
 
                 # Display the final pixmap
-                self.image_label.setPixmap(final_pixmap)        
+                self.image_label.setPixmap(final_pixmap) 
+                self.final_pixmap = final_pixmap       
             else:
                 self.image_label.setText("Failed to load image!")
+    
+    def test_analysis(self):
+        output_path = os.path.expanduser("~/Documents/School/S4/Projet/output.png")
+        output_path2 = os.path.expanduser("~/Documents/School/S4/Projet/gcode.txt")
+        cv_img = ManipImage(self.final_pixmap)
+        cv_img.load_image()
+        cv_img.analyze_image()
+        cv_img.draw_circles(output_path)
+        cv_img.convert_gcode(output_path2)
 
-def convertCvImageToQtImage(cv_img):
+def convertCvImageToQtImage(cv_img:cv.Mat) -> QImage:
     height, width = cv_img.shape[:2]
     cv_img = cv.cvtColor(cv_img, cv.COLOR_BGR2RGB)
     bytesPerLine = 3 * width
@@ -76,15 +91,15 @@ def convertCvImageToQtImage(cv_img):
     return qImg
 
 if __name__ == "__main__":
-    # app = QApplication(sys.argv)
-    # uploader = MainWindow()
-    # uploader.show()
-    # sys.exit(app.exec())
-    filepath = os.path.expanduser("~/Documents/School/S4/Projet/heart.png")
-    output_path = os.path.expanduser("~/Documents/School/S4/Projet/output.png")
-    output_path2 = os.path.expanduser("~/Documents/School/S4/Projet/gcode.txt")
-    cv_img = ManipImage(filepath)
-    cv_img.load_image()
-    cv_img.analyze_image()
-    cv_img.draw_circles(output_path)
-    cv_img.convert_gcode(output_path2)
+    app = QApplication(sys.argv)
+    uploader = MainWindow()
+    uploader.show()
+    sys.exit(app.exec())
+    # filepath = os.path.expanduser("~/Documents/School/S4/Projet/heart.png")
+    # output_path = os.path.expanduser("~/Documents/School/S4/Projet/output.png")
+    # output_path2 = os.path.expanduser("~/Documents/School/S4/Projet/gcode.txt")
+    # cv_img = ManipImage(filepath)
+    # cv_img.load_image()
+    # cv_img.analyze_image()
+    # cv_img.draw_circles(output_path)
+    # cv_img.convert_gcode(output_path2)

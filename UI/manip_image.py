@@ -1,14 +1,35 @@
 import numpy as np
 import cv2 as cv
 from PIL import Image, ImageDraw
+from PyQt6.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog
+from PyQt6.QtGui import QPixmap, QPainter, QImage
+from PyQt6.QtCore import Qt
 
 class ManipImage:
-    def __init__(self, file_path, circle_radius=10):
+    def __init__(self, circle_radius=10, file_path=None, pixmap=None):
         self.image = None
         self.file_path = file_path
+        self.pixmap = pixmap
         self.circle_radius = circle_radius
         self.circles = []
 
+    def _convertPixmapToCvImage(self, pixmap):
+        try:
+            qimage = QPixmap.toImage(pixmap)
+            return self._convertQtImageToCvImage(qimage)
+        except Exception as e:
+            print(f"Error occured as e:{e}")
+
+    def _convertQtImageToCvImage(self, qimage):
+        try:
+            image = QImage.convertToFormat(QImage.Format.Format_RGB32)
+            width, height = QImage.size(image)
+            ptr = QImage.bits(image)
+            cv_img = np.array(ptr).reshape(height, width, 4)
+            return cv_img
+        except Exception as e:
+            print(f"Error occured as e:{e}")
+    
     def setCvImage(self):
         try:
             self.image = cv.imread(self.file_path)
@@ -24,7 +45,10 @@ class ManipImage:
     #         print(f"Error occured while trying to analyze the image: {e}")
 
     def load_image(self):
-        self.image = Image.open(self.file_path).convert("L")
+        if self.file_path is None:
+            self.image = self._convertPixmapToCvImage(self.pixmap)
+        elif self.pixmap is None:
+            self.image = Image.open(self.file_path).convert("L")
         return self.image
 
     def analyze_image(self):

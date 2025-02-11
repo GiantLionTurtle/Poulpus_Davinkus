@@ -1,9 +1,10 @@
-from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QWidget, QGridLayout, QHBoxLayout, QVBoxLayout
+from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QWidget, QGridLayout, QHBoxLayout, QVBoxLayout, QFileDialog
 from PyQt6.QtGui import QPixmap, QPainter, QPen, QColor, QIcon, QBrush, QPolygon, QPainterPath
 from PyQt6.QtCore import Qt, QSize, QPoint
 from functools import partial
 import sys
 import math
+from Uploader import Uploader
 
 class Window(QMainWindow):
     SHAPE_SIZE = 50  # Fixed shape size
@@ -11,9 +12,10 @@ class Window(QMainWindow):
     def __init__(self):
         super().__init__()
         
-        self.setWindowTitle("Paint Poulpus Davinkus")
+        self.setWindowTitle("Poulpus Davinkus")
         self.setGeometry(100, 100, 800, 600)
         self.current_shape = "Line"
+        self.current_mode = "Drawing"
         self.current_color = QColor("black")
         self.previousPoint = None
 
@@ -23,10 +25,11 @@ class Window(QMainWindow):
         
         main_layout = QGridLayout()
         central_widget.setLayout(main_layout)
+
         
         # Color buttons
         colors = ["red", "cyan", "#deac2c", "yellow", "black", "magenta", "blue", "gray", "white"]
-        color_container = QWidget()
+        self.color_container = QWidget()
         color_layout = QHBoxLayout()
         for color in colors:
             button = QPushButton()
@@ -35,11 +38,11 @@ class Window(QMainWindow):
             button.setFixedSize(35, 35)
             button.clicked.connect(partial(self.set_pen_color, color))
             color_layout.addWidget(button)
-        color_container.setLayout(color_layout)
-        main_layout.addWidget(color_container, 0, 1, 1, 2)
+        self.color_container.setLayout(color_layout)
+        main_layout.addWidget(self.color_container, 0, 1, 1, 2)
 
         # Shape buttons
-        side_buttons_container = QWidget()
+        self.side_buttons_container = QWidget()
         side_buttons_layout = QVBoxLayout()
         shapes = ["Line", "Square", "Triangle", "Circle", "Ink", "Star"]
         for shape in shapes:
@@ -47,8 +50,8 @@ class Window(QMainWindow):
             btn.setFixedSize(80, 30)
             btn.clicked.connect(partial(self.set_shape, shape))
             side_buttons_layout.addWidget(btn)
-        side_buttons_container.setLayout(side_buttons_layout)
-        main_layout.addWidget(side_buttons_container, 1, 0, 4, 1)
+        self.side_buttons_container.setLayout(side_buttons_layout)
+        main_layout.addWidget(self.side_buttons_container, 1, 0, 4, 1)
         
         # Left canvas
         self.left_canvas = QPixmap(400, 400)
@@ -77,18 +80,47 @@ class Window(QMainWindow):
 
         self.splatterImage = QPixmap("C:/S4-Projet/Poulpus_Davinkus/UI/Splatter")
 
+        #Mode button
+        mode_button = QPushButton("Change mode")
+        mode_button.clicked.connect(self.change_mode)
+        mode_button.setFixedSize(150, 40)
+        main_layout.addWidget(mode_button, 0, 5, 1, 1)
+
+        #Upload image button
+        #self.uploader = QPushButton("Upload an image")
+        #self.uploader.setFixedSize(150,40)
+        self.uploader = Uploader(self.left_label)
+        #self.uploader.clicked.connect(MainWindow.upload_image)
+        main_layout.addWidget(self.uploader,0,2,1,1)
+        self.uploader.hide()
+
+    def change_mode(self):
+        self.clear_canvas()
+        if self.current_mode == "Drawing":
+            self.current_mode = "Image"
+            self.side_buttons_container.hide()
+            self.color_container.hide()
+            self.uploader.show()
+        else:
+            self.current_mode = "Drawing"
+            self.side_buttons_container.show()
+            self.color_container.show()
+            self.uploader.hide()
+
+
     def draw_splatter(self, position, painter):
         num_points = 12  # Number of splatter points in the burst pattern
         radius = 25  # Radius of the burst
 
         for i in range(num_points):
-            angle = 2 * math.pi * i / num_points  # Evenly spaced points around the circle
-            offset_x = int(radius * math.cos(angle))  # X offset based on angle
-            offset_y = int(radius * math.sin(angle))  # Y offset based on angle
+            angle = 2 * math.pi * i / num_points  
+            # Evenly spaced points around the circle
+            offset_x = int(radius * math.cos(angle)) 
+            offset_y = int(radius * math.sin(angle))  
             
             splatter_position = QPoint(position.x() + offset_x, position.y() + offset_y)
             
-            # Define a consistent shape for splatter (e.g., small circles or stars)
+            # Define a consistent shape for splatter 
             points = QPolygon([
                 QPoint(splatter_position.x(), splatter_position.y() - 5),
                 QPoint(splatter_position.x() + 2, splatter_position.y() - 2),

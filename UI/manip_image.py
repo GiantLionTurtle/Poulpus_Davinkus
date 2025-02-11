@@ -75,4 +75,4 @@ class ManipImage:
 
         with open(output_path, "w") as txt_file:
             for line in gcode:
-                txt_file.write(" ".join(line) + "\n")
+                txt_file.write("".join(line) + "\n")

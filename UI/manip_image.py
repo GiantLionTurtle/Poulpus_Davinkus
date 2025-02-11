@@ -71,7 +71,7 @@ class ManipImage:
         gcode = []
         for circle in self.circles:
             x, y = circle
-            gcode.append(f"G01 X{x} Y{y}")
+            gcode.append(f"G1 X{x} Y{y}")
 
         with open(output_path, "w") as txt_file:
             for line in gcode:

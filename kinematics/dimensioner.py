@@ -2,6 +2,16 @@
 import argparse
 import math
 import matplotlib.pyplot as plt
+from matplotlib import cm
+import mathutil
+import random as rng
+import numpy as np
+
+from skimage import measure
+from scipy.spatial import cKDTree
+import open3d as o3d
+import numpy as np
+
 
 class Vector3d:
   def __init__(self, x: float, y: float, z: float):
@@ -31,11 +41,19 @@ class Vector3d:
   def cross(self, other):
     return Vector3d(self.y * other.z - self.z * other.y, self.z * other.x - self.x * other.z, self.x * other.y - self.y * other.x)
 
+  def to_list(self):
+    return [self.x, self.y, self.z]
+
 class Actuator:
   def __init__(self, start: Vector3d, end: Vector3d):
     self.start = start
     self.end = end
   
+  def at_lerp(self, lerp):
+    return self.direction().times(lerp).plus(self.start)
+  def at_dist(self, dist):
+    return self.at_lerp(dist / self.length) # is this right within the context of clipper?
+
   def direction(self) -> Vector3d:
     return self.end.minus(self.start)
   
@@ -59,8 +77,19 @@ class Actuator:
   def plot(self, ax, param):
     ax.plot([self.start.x, self.end.x], [self.start.y, self.end.y], [self.start.z, self.end.z], param)
 
+def data_for_cylinder_along_z(center_x,center_y,radius,height_z):
+    z = np.linspace(0, height_z, 50)
+    theta = np.linspace(0, 2*np.pi, 50)
+    theta_grid, z_grid=np.meshgrid(theta, z)
+    x_grid = radius*np.cos(theta_grid) + center_x
+    y_grid = radius*np.sin(theta_grid) + center_y
+    return x_grid,y_grid,z_grid
+
 class ConvDelta:
-  def __init__(self, base: float, angle: float, startexclusion: float, endexclusion: float, disttoactuator: float, height: float):
+  def __init__(self, base: float, angle: float, startexclusion: float, endexclusion: float, disttoactuator: float, height: float, armlength: float):
+    
+    self.armlength = armlength
+
     circumscribed_radius = base / math.sqrt(3.0)
     inscribed_radius = circumscribed_radius / 2.0
 
@@ -89,24 +118,88 @@ class ConvDelta:
   def write_configs(self, file):
     file.write("[stepper_a]\n{}\n\n[stepper_b]\n{}\n\n[stepper_c]\n{}\n".format(self.act_a.to_str(), self.act_b.to_str(), self.act_c.to_str()))
 
+  def test_forward(self, n_points):
+
+    xs = []
+    ys = []
+    zs = []
+    for i in range(0, n_points):
+      rands = [rng.random(), rng.random(), rng.random()]
+      pos = mathutil.trilateration([self.act_a.at_lerp(rands[0]).to_list(), self.act_b.at_lerp(rands[1]).to_list(), self.act_c.at_lerp(rands[2]).to_list()], [self.armlength**2, self.armlength**2, self.armlength**2])
+      xs.append(pos[0])
+      ys.append(pos[1])
+      zs.append(pos[2])
+    
+    return (xs, ys, zs)
+
   def plot(self):
-    fig = plt.figure()
-    ax = fig.add_subplot(projection='3d')
+    actuators_positions = [self.act_a.start.to_list(), self.act_a.end.to_list(), self.ide_act_a.start.to_list(), self.ide_act_a.end.to_list(),
+                           self.act_b.start.to_list(), self.act_b.end.to_list(), self.ide_act_b.start.to_list(), self.ide_act_b.end.to_list(),
+                           self.act_c.start.to_list(), self.act_c.end.to_list(), self.ide_act_c.start.to_list(), self.ide_act_c.end.to_list()]
+    lines = [[0, 1], [2, 3], [4, 5], [6, 7], [8, 9], [10, 11]]
+    colors = [[1, 0, 0] for i in range(len(lines))]
+    actuators_lines = o3d.geometry.LineSet()
+    actuators_lines.points = o3d.utility.Vector3dVector(actuators_positions)
+    actuators_lines.lines = o3d.utility.Vector2iVector(lines)
+    actuators_lines.colors = o3d.utility.Vector3dVector(colors)
 
-    self.ide_act_a.plot(ax, 'r')
-    self.ide_act_b.plot(ax, 'g')
-    self.ide_act_c.plot(ax, 'b')
+    # Work cylinder which we wish to reach
+    work_cylinder = o3d.geometry.TriangleMesh.create_cylinder(radius=175, height=150, resolution=20, split=4).translate([0.0, 0.0, 150.0/2.0])
 
-    self.act_a.plot(ax, 'r')
-    self.act_b.plot(ax, 'g')
-    self.act_c.plot(ax, 'b')
 
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
+    # Compute many points within the work enveloppe
+    enveloppe = self.test_forward(1500000)
+    enveloppe_points = np.column_stack(enveloppe)
 
-    plt.show()
-  
+
+    # Marching cubes on enveloppe points to create a mesh for further visualization/analysis
+    voxel_size=5
+    iso_level_percentile=30
+
+    mins = np.min(enveloppe_points, axis=0) - 25
+    maxs = np.max(enveloppe_points, axis=0) + 25
+
+    x = np.arange(mins[0], maxs[0], voxel_size)
+    y = np.arange(mins[1], maxs[1], voxel_size)
+    z = np.arange(mins[2], maxs[2], voxel_size)
+    x, y, z = np.meshgrid(x, y, z, indexing='ij')
+
+    tree = cKDTree(enveloppe_points)
+
+    grid_points = np.vstack([x.ravel(), y.ravel(), z.ravel()]).T
+    distances, _ = tree.query(grid_points)
+    scalar_field = distances.reshape(x.shape)
+
+    iso_level = np.percentile(distances, iso_level_percentile)
+
+    verts, faces, _, _ = measure.marching_cubes(scalar_field, level=iso_level)
+
+    verts = verts * voxel_size + mins
+
+    mesh = o3d.geometry.TriangleMesh()
+    mesh.vertices = o3d.utility.Vector3dVector(verts)
+    mesh.triangles = o3d.utility.Vector3iVector(faces)
+
+    mesh.compute_vertex_normals()
+
+
+    # Show geometries
+    viewer = o3d.visualization.Visualizer()
+    viewer.create_window()
+
+    viewer.add_geometry(mesh)
+    viewer.add_geometry(actuators_lines)
+    viewer.add_geometry(work_cylinder)
+
+    opt = viewer.get_render_option()
+    opt.show_coordinate_frame = True
+    opt.background_color = np.asarray([0.5, 0.5, 0.5])
+    viewer.run()
+    viewer.destroy_window()
+
+    o3d.io.write_triangle_mesh('mesh.stl', mesh)
+
+
 
 def main():
   parser = argparse.ArgumentParser()
@@ -119,14 +212,16 @@ def main():
   parser.add_argument("-c", "--configfile", type=str)
   parser.add_argument("-w", "--workspacefile", type=str)
   parser.add_argument("-p", "--plot", action="store_true")
+  parser.add_argument("-y", "--armlength", type=float)
+  
 
   args = parser.parse_args()
 
-  model = ConvDelta(args.base, args.angle, args.startexclusion, args.endexclusion, args.disttoactuator, args.height)
+  model = ConvDelta(args.base, args.angle, args.startexclusion, args.endexclusion, args.disttoactuator, args.height, args.armlength)
   
   if args.configfile:
     with open(args.configfile, "w") as f:
-      f.write("# base={}; angle={}; startexclusion={}; endexclusion={}; disttoactuator={}; height={};\n\n".format(args.base, args.angle, args.startexclusion, args.endexclusion, args.disttoactuator, args.height))
+      f.write("# base={}; angle={}; startexclusion={}; endexclusion={}; disttoactuator={}; height={}; arm={}\n\n".format(args.base, args.angle, args.startexclusion, args.endexclusion, args.disttoactuator, args.height, args.armlength))
       model.write_configs(f)
   
   if args.plot:

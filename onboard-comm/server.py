@@ -17,7 +17,8 @@ def main(host,port):
         print(f"[*] Data from client: {data}")
         gcode_line = data.strip()
         print(f"Received G-code: {gcode_line}")
-        client_socket.sendall(gcode_line)
+        #If want to add later a confirmation message
+        #client_socket.sendall("Received")
     client_socket.close()
     s.close()
 

@@ -1,6 +1,6 @@
 import socket
 
-def main(host='raspberrypi.local', port=5000, gcode_file='test.gcode.txt'):
+def main(host, port, gcode_file='test.gcode.txt'):
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((host, port))
@@ -20,7 +20,7 @@ def main(host='raspberrypi.local', port=5000, gcode_file='test.gcode.txt'):
         print("Connection closed")
     return
 
-def test(host='raspberrypi.local', port=5000):
+def test(host, port):
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((host, port))
@@ -34,4 +34,4 @@ def test(host='raspberrypi.local', port=5000):
     return
 
 if __name__ == '__main__':
-    test()
+    test("rpi_ip_adress", 5000)

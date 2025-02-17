@@ -22,4 +22,4 @@ def main(host,port):
     s.close()
 
 if __name__ == "__main__":
-    main("ip_adress",5000)
+    main("0.0.0.0",5000)

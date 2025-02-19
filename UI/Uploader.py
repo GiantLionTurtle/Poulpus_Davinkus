@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QPushButton, QFileDialog, QLabel
 from PyQt6.QtGui import QPixmap, QImage, QPainter
 from PyQt6.QtCore import Qt
+from manip_image import ManipImage
 import cv2 as cv
 
 class Uploader(QPushButton):
@@ -10,17 +11,28 @@ class Uploader(QPushButton):
         self.image_label = image_label  # QLabel where the image will be displayed
         self.clicked.connect(self.upload_image)  # Connect button click to function
 
+    def convertCvImageToQtImage(self, cv_img):
+        """Converts an OpenCV image (BGR) to a QImage"""
+        height, width = cv_img.shape[:2]
+        cv_img = cv.cvtColor(cv_img, cv.COLOR_BGR2RGB)
+        bytesPerLine = 3 * width
+        return QImage(cv_img.data, width, height, bytesPerLine, QImage.Format.Format_RGB888)
+
     def upload_image(self):
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, "Open Image File", "", "Images (*.png *.jpg *.jpeg *.bmp *.gif)"
+        file_dialog = QFileDialog(self)
+        file_path, _ = file_dialog.getOpenFileName(
+           self, "Open Image File", "", "Images (*.png *.jpg *.jpeg *.bmp *.gif)"
         )
+        #file_path = os.path.expanduser("~/Documents/School/S4/Projet/lesun.jpg")
         if file_path:
-            cv_img = cv.imread(file_path)  # Load image as OpenCV format
+            # Load the image and convert it to a QPixmap from a cv image (numpy array)) test
+            #pixmap = QPixmap(file_path)
+            cv_img = ManipImage(file_path=file_path)
+            cv_img = cv_img.setCvImage()
             qImg = self.convertCvImageToQtImage(cv_img)
             pixmap = QPixmap.fromImage(qImg)
-
             if not pixmap.isNull():
-                # Keep aspect ratio
+                # Garde le aspect ratio
                 scaled_pixmap = pixmap.scaled(
                     self.image_label.width(),
                     self.image_label.height(),
@@ -28,23 +40,21 @@ class Uploader(QPushButton):
                     Qt.TransformationMode.SmoothTransformation,
                 )
 
-                # Create a final image with padding to avoid distortion
+                # Mettre le vrai size de l'image en premier
                 final_pixmap = QPixmap(self.image_label.size())
                 final_pixmap.fill(Qt.GlobalColor.transparent)
 
+                # Permet de fill les cotées avec du blanc pour que l'image ne soit pas déformer
                 painter = QPainter(final_pixmap)
                 x_offset = (self.image_label.width() - scaled_pixmap.width()) // 2
                 y_offset = (self.image_label.height() - scaled_pixmap.height()) // 2
                 painter.drawPixmap(x_offset, y_offset, scaled_pixmap)
                 painter.end()
 
-                self.image_label.setPixmap(final_pixmap)
+                # Display the final pixmap
+                self.image_label.setPixmap(final_pixmap) 
+                self.final_pixmap = final_pixmap       
             else:
                 self.image_label.setText("Failed to load image!")
 
-    def convertCvImageToQtImage(self, cv_img):
-        """Converts an OpenCV image (BGR) to a QImage"""
-        height, width = cv_img.shape[:2]
-        cv_img = cv.cvtColor(cv_img, cv.COLOR_BGR2RGB)
-        bytesPerLine = 3 * width
-        return QImage(cv_img.data, width, height, bytesPerLine, QImage.Format.Format_RGB888)
+    

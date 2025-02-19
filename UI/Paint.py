@@ -5,6 +5,9 @@ from functools import partial
 import sys
 import math
 from Uploader import Uploader
+from Shapes import draw_circle, draw_splatter, draw_square, draw_star, draw_triangle
+from Colors import ColorPicker
+from Canvas import Canvas
 
 class Window(QMainWindow):
     SHAPE_SIZE = 50  # Fixed shape size
@@ -27,19 +30,9 @@ class Window(QMainWindow):
         central_widget.setLayout(main_layout)
 
         
-        # Color buttons
-        colors = ["red", "cyan", "#deac2c", "yellow", "black", "magenta", "blue", "gray", "white"]
-        self.color_container = QWidget()
-        color_layout = QHBoxLayout()
-        for color in colors:
-            button = QPushButton()
-            button.setIcon(self.create_color_icon(color, 25))
-            button.setIconSize(QSize(25, 25))
-            button.setFixedSize(35, 35)
-            button.clicked.connect(partial(self.set_pen_color, color))
-            color_layout.addWidget(button)
-        self.color_container.setLayout(color_layout)
-        main_layout.addWidget(self.color_container, 0, 1, 1, 2)
+        self.color_picker = ColorPicker(self)
+        main_layout.addWidget(self.color_picker.color_container, 0, 1, 1, 2)
+        
 
         # Shape buttons
         self.side_buttons_container = QWidget()
@@ -53,32 +46,24 @@ class Window(QMainWindow):
         self.side_buttons_container.setLayout(side_buttons_layout)
         main_layout.addWidget(self.side_buttons_container, 1, 0, 4, 1)
         
-        # Left canvas
-        self.left_canvas = QPixmap(400, 400)
-        self.left_canvas.fill(QColor("white"))
-        self.left_label = QLabel()
-        self.left_label.setPixmap(self.left_canvas)
-        self.left_label.setFixedSize(400, 400)
+        #left_canvas
+        self.left_canvas = Canvas(self)
+        self.left_label = self.left_canvas.canevas_label
         main_layout.addWidget(self.left_label, 1, 2, 4, 1)
         
-        # Right canvas
-        self.right_canvas = QPixmap(400, 400)
-        self.right_canvas.fill(QColor("white"))
-        self.right_label = QLabel()
-        self.right_label.setPixmap(self.right_canvas)
-        self.right_label.setFixedSize(400, 400)
+        #right_canvas
+        self.right_canvas = Canvas(self)
+        self.right_label = self.right_canvas.canevas_label
         main_layout.addWidget(self.right_label, 1, 4, 4, 2)
         
         # Clear button
         clear_button = QPushButton("Clear Canvas")
-        clear_button.clicked.connect(self.clear_canvas)
+        clear_button.clicked.connect(self.left_canvas.fill_canvas)
         clear_button.setFixedSize(150, 40)
         main_layout.addWidget(clear_button, 5, 2, 1, 1)
         
         self.pen = QPen(QColor("black"))
         self.pen.setWidth(6)
-
-        self.splatterImage = QPixmap("C:/S4-Projet/Poulpus_Davinkus/UI/Splatter")
 
         #Mode button
         mode_button = QPushButton("Change mode")
@@ -87,132 +72,64 @@ class Window(QMainWindow):
         main_layout.addWidget(mode_button, 0, 5, 1, 1)
 
         #Upload image button
-        #self.uploader = QPushButton("Upload an image")
-        #self.uploader.setFixedSize(150,40)
         self.uploader = Uploader(self.left_label)
-        #self.uploader.clicked.connect(MainWindow.upload_image)
         main_layout.addWidget(self.uploader,0,2,1,1)
         self.uploader.hide()
 
     def change_mode(self):
-        self.clear_canvas()
+        self.left_canvas.fill_canvas()
         if self.current_mode == "Drawing":
             self.current_mode = "Image"
             self.side_buttons_container.hide()
-            self.color_container.hide()
+            self.color_picker.color_container.hide()
             self.uploader.show()
         else:
             self.current_mode = "Drawing"
             self.side_buttons_container.show()
-            self.color_container.show()
+            self.color_picker.color_container.show()
             self.uploader.hide()
-
-
-    def draw_splatter(self, position, painter):
-        num_points = 12  # Number of splatter points in the burst pattern
-        radius = 25  # Radius of the burst
-
-        for i in range(num_points):
-            angle = 2 * math.pi * i / num_points  
-            # Evenly spaced points around the circle
-            offset_x = int(radius * math.cos(angle)) 
-            offset_y = int(radius * math.sin(angle))  
-            
-            splatter_position = QPoint(position.x() + offset_x, position.y() + offset_y)
-            
-            # Define a consistent shape for splatter 
-            points = QPolygon([
-                QPoint(splatter_position.x(), splatter_position.y() - 5),
-                QPoint(splatter_position.x() + 2, splatter_position.y() - 2),
-                QPoint(splatter_position.x() + 5, splatter_position.y() - 2),
-                QPoint(splatter_position.x() + 2, splatter_position.y() + 2),
-                QPoint(splatter_position.x() + 3, splatter_position.y() + 5),
-                QPoint(splatter_position.x(), splatter_position.y() + 3),
-                QPoint(splatter_position.x() - 3, splatter_position.y() + 5),
-                QPoint(splatter_position.x() - 2, splatter_position.y() + 2),
-                QPoint(splatter_position.x() - 5, splatter_position.y() - 2),
-                QPoint(splatter_position.x() - 2, splatter_position.y() - 2),
-            ])
-            painter.drawPolygon(points)
-
-    def create_color_icon(self, color, size=30):
-        pixmap = QPixmap(size, size)
-        pixmap.fill(QColor(color))
-        return QIcon(pixmap)
-
-    def set_pen_color(self, color):
-        self.current_color = QColor(color)
-        self.pen.setColor(self.current_color)
 
     def set_shape(self, shape):
         self.current_shape = shape
 
-    def clear_canvas(self):
-        self.left_canvas.fill(QColor("white"))
-        self.right_canvas.fill(QColor("white"))
-        self.left_label.setPixmap(self.left_canvas)
-        self.right_label.setPixmap(self.right_canvas)
-
+    #Action of adding shapes when the mouse is clicked on the canevas
     def mousePressEvent(self, event):
-        position = self.left_label.mapFrom(self, event.pos())
-        painter = QPainter(self.left_canvas)
-        self.pen.setColor(self.current_color)
-        painter.setPen(self.pen)
-        painter.setBrush(QBrush(self.current_color, Qt.BrushStyle.SolidPattern))  # Ensure the fill color is set
+        if self.current_mode == "Drawing":
+            position = self.left_label.mapFrom(self, event.pos())
+            painter = QPainter(self.left_canvas.canvas)
+            self.pen.setColor(self.current_color)
+            painter.setPen(self.pen)
+            painter.setBrush(QBrush(self.current_color, Qt.BrushStyle.SolidPattern))  # Ensure the fill color is set
 
-        if self.current_shape == "Circle":
-            # Draw the circle centered on the mouse click position
-            painter.drawEllipse(position.x() - self.SHAPE_SIZE // 2, position.y() - self.SHAPE_SIZE // 2, self.SHAPE_SIZE, self.SHAPE_SIZE)
-        elif self.current_shape == "Square":
-            # Draw the square centered on the mouse click position
-            painter.drawRect(position.x() - self.SHAPE_SIZE // 2, position.y() - self.SHAPE_SIZE // 2, self.SHAPE_SIZE, self.SHAPE_SIZE)
-        elif self.current_shape == "Triangle":
-            # Draw the triangle centered on the mouse click position
-            points = QPolygon([
-                QPoint(position.x(), position.y() - self.SHAPE_SIZE // 2),
-                QPoint(position.x() + self.SHAPE_SIZE // 2, position.y() + self.SHAPE_SIZE // 2),
-                QPoint(position.x() - self.SHAPE_SIZE // 2, position.y() + self.SHAPE_SIZE // 2)
-            ])
-            painter.drawPolygon(points)
-        elif self.current_shape == "Star":
-            # Draw a single point at the mouse click position
-            points = QPolygon([
-                QPoint(position.x(), position.y() - 25),
-                QPoint(position.x() + 10, position.y() - 10),
-                QPoint(position.x() + 25, position.y() - 10),
-                QPoint(position.x() + 15, position.y() + 5),
-                QPoint(position.x() + 20, position.y() + 20),
-                QPoint(position.x(), position.y() + 10),
-                QPoint(position.x() - 20, position.y() + 20),
-                QPoint(position.x() - 15, position.y() + 5),
-                QPoint(position.x() - 25, position.y() - 10),
-                QPoint(position.x() - 10, position.y() - 10),
-            ])
-            painter.drawPolygon(points)
-        elif self.current_shape == "Ink":
-             self.draw_splatter(position, painter)
+            if self.current_shape == "Circle":
+                draw_circle(position,painter,self.SHAPE_SIZE)
+            elif self.current_shape == "Square":
+                draw_square(position,painter,self.SHAPE_SIZE)
+            elif self.current_shape == "Triangle":
+                draw_triangle(position,painter,self.SHAPE_SIZE)
+            elif self.current_shape == "Star":
+                draw_star(position,painter,self.SHAPE_SIZE)
+            elif self.current_shape == "Ink":
+                draw_splatter(position,painter)
+            elif self.current_shape == "Line":
+                self.previousPoint = position
 
-
-            
-        elif self.current_shape == "Line":
-            self.previousPoint = position
-
-        painter.drawPoint(position)
-
-        painter.end()
-        self.left_label.setPixmap(self.left_canvas)
+            painter.drawPoint(position)
+            painter.end()
+            self.left_label.setPixmap(self.left_canvas.canvas)
 
 
     def mouseMoveEvent(self, event):
-        if self.current_shape == "Line" and self.previousPoint:
+        if self.current_mode == "Drawing" and self.current_shape == "Line" and self.previousPoint:
             position = self.left_label.mapFrom(self, event.pos())
-            painter = QPainter(self.left_canvas)
+            painter = QPainter(self.left_canvas.canvas)
             self.pen.setColor(self.current_color)
             painter.setPen(self.pen)
             painter.drawLine(self.previousPoint, position)
             painter.end()
-            self.left_label.setPixmap(self.left_canvas)
+            self.left_label.setPixmap(self.left_canvas.canvas)
             self.previousPoint = position
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

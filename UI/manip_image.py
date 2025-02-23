@@ -27,14 +27,6 @@ class ManipImage:
             return arr
         except Exception as e:
             print(f"Error occured as e:{e}") 
-    
-    #old function, use load_image instead
-    def setCvImage(self):
-        try:
-            self.image = cv.imread(self.file_path)
-            return self.image
-        except Exception as e:
-            print(f"Error occured as e:{e}")
 
     def load_image(self):
         self.image = self._convertPixmapToCvImage(self.pixmap)
@@ -88,3 +80,12 @@ class ManipImage:
         with open(output_path, "w") as txt_file:
             for line in gcode:
                 txt_file.write("".join(line) + "\n")
+
+
+#Might be useful
+def convertCvImageToQtImage(cv_img:cv.Mat) -> QImage:
+    height, width = cv_img.shape[:2]
+    cv_img = cv.cvtColor(cv_img, cv.COLOR_BGR2RGB)
+    bytesPerLine = 3 * width
+    qImg = QImage(cv_img.data, width, height, bytesPerLine, QImage.Format.Format_RGB888)
+    return qImg

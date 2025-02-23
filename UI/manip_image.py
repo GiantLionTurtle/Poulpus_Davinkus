@@ -16,26 +16,23 @@ class ManipImage:
     def _convertPixmapToCvImage(self, pixmap:QPixmap) -> np.ndarray:
         try:
             # image = []
-            # for pixel in pixmap.trueMatrix(,pixmap.width(),pixmap.height()):
+            qimage = pixmap.toImage()
+            qimage = qimage.convertToFormat(QImage.Format.Format_RGBA8888)
+            width, height = qimage.width(), qimage.height()
+    
+            ptr = qimage.bits()
+            ptr.setsize(qimage.sizeInBytes())
+            arr = np.frombuffer(ptr, dtype=np.uint8)
+            arr = arr.reshape((height, width, 4))
+
+            return arr
+            # for pixel in qimage.pixel():
             #     image.append(pixel)
             # return np.array(image)
-            # qimage = QPixmap.toImage(pixmap)
-            # return self._convertQtImageToCvImage(qimage)
-            print("A developper")
-            print("test")
         except Exception as e:
-            print(f"Error occured as e:{e}")
-
-    def _convertQtImageToCvImage(self, qimage: QImage) -> np.ndarray:
-        try:
-            # image = []
-            # for pixel in qimage.pixelColor():
-            #     image.append([pixel.red(), pixel.green(), pixel.blue()])
-            # return np.array(image)
-            print("A developper")
-        except Exception as e:
-            print(f"Error occured as e:{e}")
+            print(f"Error occured as e:{e}") 
     
+    #old function, use load_image instead
     def setCvImage(self):
         try:
             self.image = cv.imread(self.file_path)
@@ -51,10 +48,12 @@ class ManipImage:
     #         print(f"Error occured while trying to analyze the image: {e}")
 
     def load_image(self):
-        if self.file_path is None:
-            self.image = self._convertPixmapToCvImage(self.pixmap)
-        elif self.pixmap is None:
-            self.image = Image.open(self.file_path).convert("L")
+        # if self.file_path is None:
+            #Converts the image from pixmap to opencv image
+        self.image = self._convertPixmapToCvImage(self.pixmap)
+        # elif self.pixmap is None:
+        #     #Opens the image and converts it to grayscale
+        #     self.image = Image.open(self.file_path).convert("L")
         return self.image
 
     def analyze_image(self):
@@ -62,7 +61,8 @@ class ManipImage:
             raise ValueError("Image not loaded. Call load_image() first.")
         
         # Convert the image to a NumPy array with type uint8
-        img_array = np.array(self.image.convert("L"), dtype=np.uint8)
+        #img_array = np.array(self.image.convert("L"), dtype=np.uint8)
+        img_array = cv.cvtColor(self.image, cv.COLOR_BGR2GRAY)
         
         # Apply a binary threshold to isolate the shape (heart)
         _, binary_img = cv.threshold(img_array, 50, 255, cv.THRESH_BINARY)
@@ -82,7 +82,8 @@ class ManipImage:
         if self.image is None:
             raise ValueError("Image not loaded, call load_image() first")
 
-        output_image = self.image.convert("RGB")
+        output_image = cv.cvtColor(self.image, cv.COLOR_BGR2RGB)
+        output_image = Image.fromarray(output_image)
         draw = ImageDraw.Draw(output_image)
 
         # Draw the circles to visualize the detected positions

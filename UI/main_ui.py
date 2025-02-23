@@ -42,12 +42,7 @@ class MainWindow(QWidget):
         )
         #file_path = os.path.expanduser("~/Documents/School/S4/Projet/lesun.jpg")
         if file_path:
-            # Load the image and convert it to a QPixmap from a cv image (numpy array)) test
-            #pixmap = QPixmap(file_path)
-            cv_img = ManipImage(file_path=file_path)
-            cv_img = cv_img.setCvImage()
-            qImg = convertCvImageToQtImage(cv_img)
-            pixmap = QPixmap.fromImage(qImg)
+            pixmap = QPixmap(file_path)
             if not pixmap.isNull():
                 # Garde le aspect ratio
                 scaled_pixmap = pixmap.scaled(
@@ -83,23 +78,8 @@ class MainWindow(QWidget):
         cv_img.draw_circles(output_path)
         cv_img.convert_gcode(output_path2)
 
-def convertCvImageToQtImage(cv_img:cv.Mat) -> QImage:
-    height, width = cv_img.shape[:2]
-    cv_img = cv.cvtColor(cv_img, cv.COLOR_BGR2RGB)
-    bytesPerLine = 3 * width
-    qImg = QImage(cv_img.data, width, height, bytesPerLine, QImage.Format.Format_RGB888)
-    return qImg
-
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     uploader = MainWindow()
     uploader.show()
     sys.exit(app.exec())
-    # filepath = os.path.expanduser("~/Documents/School/S4/Projet/heart.png")
-    # output_path = os.path.expanduser("~/Documents/School/S4/Projet/output.png")
-    # output_path2 = os.path.expanduser("~/Documents/School/S4/Projet/gcode.txt")
-    # cv_img = ManipImage(filepath)
-    # cv_img.load_image()
-    # cv_img.analyze_image()
-    # cv_img.draw_circles(output_path)
-    # cv_img.convert_gcode(output_path2)

@@ -16,14 +16,12 @@ class ManipImage:
     def _convertPixmapToCvImage(self, pixmap:QPixmap) -> np.ndarray:
         try:
             qimage = pixmap.toImage()
-            qimage = qimage.convertToFormat(QImage.Format.Format_RGBA8888)
+            qimage = qimage.convertToFormat(QImage.Format.Format_BGR888)
             width, height = qimage.width(), qimage.height()
-    
             ptr = qimage.bits()
             ptr.setsize(qimage.sizeInBytes())
             arr = np.frombuffer(ptr, dtype=np.uint8)
-            arr = arr.reshape((height, width, 4))
-
+            arr = arr.reshape((height, width, 3))
             return arr
         except Exception as e:
             print(f"Error occured as e:{e}") 
@@ -39,7 +37,7 @@ class ManipImage:
         img_array = cv.cvtColor(self.image, cv.COLOR_BGR2GRAY)
         
         # Apply a binary threshold to isolate the shape (heart)
-        _, binary_img = cv.threshold(img_array, 50, 255, cv.THRESH_BINARY)
+        _, binary_img = cv.threshold(img_array, 40, 255, cv.THRESH_BINARY)
 
         # Grid sampling (convert analog to discrete image) to detect areas to stamp
         height, width = binary_img.shape

@@ -15,7 +15,6 @@ class ManipImage:
 
     def _convertPixmapToCvImage(self, pixmap:QPixmap) -> np.ndarray:
         try:
-            # image = []
             qimage = pixmap.toImage()
             qimage = qimage.convertToFormat(QImage.Format.Format_RGBA8888)
             width, height = qimage.width(), qimage.height()
@@ -26,9 +25,6 @@ class ManipImage:
             arr = arr.reshape((height, width, 4))
 
             return arr
-            # for pixel in qimage.pixel():
-            #     image.append(pixel)
-            # return np.array(image)
         except Exception as e:
             print(f"Error occured as e:{e}") 
     
@@ -40,28 +36,14 @@ class ManipImage:
         except Exception as e:
             print(f"Error occured as e:{e}")
 
-    # def imageAnalysis(self):
-    #     try:
-    #         self.image = cv.imread(self.file_path, cv.IMREAD_GRAYSCALE)
-    #         return self.image
-    #     except Exception as e:
-    #         print(f"Error occured while trying to analyze the image: {e}")
-
     def load_image(self):
-        # if self.file_path is None:
-            #Converts the image from pixmap to opencv image
         self.image = self._convertPixmapToCvImage(self.pixmap)
-        # elif self.pixmap is None:
-        #     #Opens the image and converts it to grayscale
-        #     self.image = Image.open(self.file_path).convert("L")
         return self.image
 
     def analyze_image(self):
         if self.image is None:
             raise ValueError("Image not loaded. Call load_image() first.")
         
-        # Convert the image to a NumPy array with type uint8
-        #img_array = np.array(self.image.convert("L"), dtype=np.uint8)
         img_array = cv.cvtColor(self.image, cv.COLOR_BGR2GRAY)
         
         # Apply a binary threshold to isolate the shape (heart)
@@ -69,7 +51,7 @@ class ManipImage:
 
         # Grid sampling (convert analog to discrete image) to detect areas to stamp
         height, width = binary_img.shape
-        step = self.circle_radius * 2  # Distance between circle centers
+        step = self.circle_radius * 2
 
         for y in range(0, height, step):
             for x in range(0, width, step):

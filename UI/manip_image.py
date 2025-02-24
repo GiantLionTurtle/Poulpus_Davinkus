@@ -35,9 +35,15 @@ class ManipImage:
             raise ValueError("Image not loaded. Call load_image() first.")
         
         img_array = cv.cvtColor(self.image, cv.COLOR_BGR2GRAY)
+
+        cv.imshow("Gray Image", img_array)
+        cv.waitKey(0)
         
         # Apply a binary threshold to isolate the shape (heart)
         _, binary_img = cv.threshold(img_array, 40, 255, cv.THRESH_BINARY)
+
+        cv.imshow("Binary Image", binary_img)
+        cv.waitKey(0)
 
         # Grid sampling (convert analog to discrete image) to detect areas to stamp
         height, width = binary_img.shape
@@ -50,15 +56,34 @@ class ManipImage:
                     self.circles.append((x, y))
 
 
-    def draw_circles(self, output_path="output.png"):
-        if self.image is None:
-            raise ValueError("Image not loaded, call load_image() first")
+    # def draw_circles(self, output_path="output.png"):
+    #     if self.image is None:
+    #         raise ValueError("Image not loaded, call load_image() first")
 
-        output_image = cv.cvtColor(self.image, cv.COLOR_BGR2RGB)
-        output_image = Image.fromarray(output_image)
+    #     output_image = cv.cvtColor(self.image, cv.COLOR_BGR2RGB)
+    #     output_image = Image.fromarray(output_image)
+    #     draw = ImageDraw.Draw(output_image)
+
+    #     # Draw the circles to visualize the detected positions
+    #     for x, y in self.circles:
+    #         draw.ellipse(
+    #             [x - self.circle_radius, y - self.circle_radius, x + self.circle_radius, y + self.circle_radius],
+    #             outline="red",
+    #             width=2
+    #         )
+
+    #     # Save the output
+    #     output_image.save(output_path)
+
+    def draw_circles(self, output_path, image_size, background):
+        if not self.circles:
+            raise ValueError("No circles detected")
+
+        # Create a blank image with a white background
+        output_image = Image.new("RGB", image_size, background)
         draw = ImageDraw.Draw(output_image)
 
-        # Draw the circles to visualize the detected positions
+        # Draw the circles
         for x, y in self.circles:
             draw.ellipse(
                 [x - self.circle_radius, y - self.circle_radius, x + self.circle_radius, y + self.circle_radius],
@@ -68,12 +93,22 @@ class ManipImage:
 
         # Save the output
         output_image.save(output_path)
+
     
-    def convert_gcode(self, output_path):
+    def convert_gcode(self, output_path, paper_size, image_size):
+    
         gcode = []
-        for circle in self.circles:
-            x, y = circle
-            gcode.append(f"G1 X{x} Y{y}")
+
+        max_x, max_y = image_size
+        paper_width, paper_height = paper_size
+
+        for x, y in self.circles:
+            x_mm = (x / max_x) * paper_width
+            y_mm = paper_height - (y / max_y) * paper_height
+
+            gcode.append(f"G1 Y{-10}")
+            gcode.append(f"G1 X{x_mm:.2f} Y{y_mm:.2f}")
+            gcode.append(f"G1 Y{10}")
 
         with open(output_path, "w") as txt_file:
             for line in gcode:

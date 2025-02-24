@@ -75,8 +75,8 @@ class MainWindow(QWidget):
         cv_img = ManipImage(pixmap=self.final_pixmap)
         cv_img.load_image()
         cv_img.analyze_image()
-        cv_img.draw_circles(output_path)
-        cv_img.convert_gcode(output_path2)
+        cv_img.draw_circles(output_path, (400, 600), "white")
+        cv_img.convert_gcode(output_path2, (210, 297), (400, 600))
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

@@ -106,9 +106,9 @@ class ManipImage:
             x_mm = (x / max_x) * paper_width
             y_mm = paper_height - (y / max_y) * paper_height
 
-            gcode.append(f"G1 Y{-10}")
+            gcode.append(f"G1 Z{-10}")
             gcode.append(f"G1 X{x_mm:.2f} Y{y_mm:.2f}")
-            gcode.append(f"G1 Y{10}")
+            gcode.append(f"G1 Z{10}")
 
         with open(output_path, "w") as txt_file:
             for line in gcode:

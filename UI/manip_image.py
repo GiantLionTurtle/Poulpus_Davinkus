@@ -55,26 +55,6 @@ class ManipImage:
                 if binary_img[y:y + step, x:x + step].sum() > 0:
                     self.circles.append((x, y))
 
-
-    # def draw_circles(self, output_path="output.png"):
-    #     if self.image is None:
-    #         raise ValueError("Image not loaded, call load_image() first")
-
-    #     output_image = cv.cvtColor(self.image, cv.COLOR_BGR2RGB)
-    #     output_image = Image.fromarray(output_image)
-    #     draw = ImageDraw.Draw(output_image)
-
-    #     # Draw the circles to visualize the detected positions
-    #     for x, y in self.circles:
-    #         draw.ellipse(
-    #             [x - self.circle_radius, y - self.circle_radius, x + self.circle_radius, y + self.circle_radius],
-    #             outline="red",
-    #             width=2
-    #         )
-
-    #     # Save the output
-    #     output_image.save(output_path)
-
     def draw_circles(self, output_path, image_size, background):
         if not self.circles:
             raise ValueError("No circles detected")

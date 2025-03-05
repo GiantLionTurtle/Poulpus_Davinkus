@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog
 from PyQt6.QtGui import QPixmap, QPainter, QImage
 from PyQt6.QtCore import Qt
-from manip_image import ManipImage
+from manip_image_simple import ManipImage
 import cv2 as cv
 import sys
 import os
@@ -76,7 +76,7 @@ class MainWindow(QWidget):
         cv_img.load_image()
         cv_img.analyze_image()
         cv_img.draw_circles(output_path, (400, 600), "white")
-        cv_img.convert_gcode(output_path2, (210, 297), (400, 600))
+        cv_img.convert_gcode(output_path2, (216, 279), (400, 600))
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

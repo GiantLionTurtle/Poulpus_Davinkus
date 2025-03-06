@@ -28,7 +28,7 @@ class ManipImage:
             ptr = qimage.bits()
             ptr.setsize(qimage.sizeInBytes())
             arr = np.frombuffer(ptr, dtype=np.uint8)
-            arr = arr.reshape((height, width, 3))
+            arr = np.reshape(arr,(height, width, 3))
             return arr
         except Exception as e:
             print(f"Error occured as e:{e}") 

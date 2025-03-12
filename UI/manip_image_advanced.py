@@ -28,6 +28,12 @@ class ManipImageAdvanced:
     def initalizeImage(self):
         image = self._convertPixmapToCvImage(self.pixmap)
         image_hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
+        edges = cv.Canny(image, 50, 200)
+        lines = cv.HoughLinesP(edges, 1, np.pi/180, 68, minLineLength=15, maxLineGap=250)
+        # Draw lines on the image
+        for line in lines:
+            x1, y1, x2, y2 = line[0]
+            cv.line(image, (x1, y1), (x2, y2), (255, 255, 255), 3)
         #Bounds to change with sliders, but static for now
         lower_bound = np.array([0, 0, 50])
         upper_bound = np.array([10, 120, 150])

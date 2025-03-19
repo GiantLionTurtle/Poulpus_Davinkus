@@ -27,22 +27,24 @@ class ManipImageAdvanced:
 
     def initalizeImage(self):
         image = self._convertPixmapToCvImage(self.pixmap)
-        image_hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
-        edges = cv.Canny(image, 50, 200)
-        lines = cv.HoughLinesP(edges, 1, np.pi/180, 68, minLineLength=15, maxLineGap=250)
-        # Draw lines on the image
-        for line in lines:
-            x1, y1, x2, y2 = line[0]
-            cv.line(image, (x1, y1), (x2, y2), (255, 255, 255), 3)
-        #Bounds to change with sliders, but static for now
-        lower_bound = np.array([0, 0, 50])
-        upper_bound = np.array([10, 120, 150])
-        #Use different masks depending on the different colors in an image generated automatically?
-        mask = cv.inRange(image_hsv, lower_bound, upper_bound)
-        self.image = image
+        image_rgb = cv.cvtColor(image, cv.COLOR_BGR2RGB)
+        image_hsv = cv.cvtColor(image_rgb, cv.COLOR_RGB2HSV)
+        image_gray = cv.cvtColor(image_rgb, cv.COLOR_RGB2GRAY)
+        contours,hierarchy = cv.findContours(image_gray, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+        cv.drawContours(image_rgb, contours, -1, (0,255,0), 3)
+        #edges = cv.Canny(image_hsv, 1, 200)
+
+        #Hough Transform
+        # lines = cv.HoughLinesP(edges, 1, np.pi/180, 68, minLineLength=1, maxLineGap=250)
+        # # Draw lines on the image
+        # for line in lines:
+        #     x1, y1, x2, y2 = line[0]
+        #     cv.line(image_hsv, (x1, y1), (x2, y2), (255, 255, 255), 3)
+
+        self.image = image_hsv
 
         plt.figure()
-        plt.imshow(image)
+        plt.imshow(image_rgb)
         plt.show()
 
     
@@ -65,3 +67,10 @@ class ManipImageAdvanced:
         with open(output_path, "w") as txt_file:
             for line in gcode:
                 txt_file.write("".join(line) + "\n")
+
+        #Peut-etre utile dans le futur
+        # #Bounds to change with sliders, but static for now
+        # lower_bound = np.array([0, 0, 50])
+        # upper_bound = np.array([10, 120, 150])
+        # #Use different masks depending on the different colors in an image generated automatically?
+        # mask = cv.inRange(image_hsv, lower_bound, upper_bound)

@@ -8,7 +8,7 @@ class ColorPicker:
         self.window = window
         self.color_container = QWidget()
         color_layout = QHBoxLayout()
-        colors = ["red", "cyan", "#deac2c", "yellow", "black", "magenta", "blue", "gray", "white"]
+        colors = ["red", "cyan", "#deac2c", "yellow", "black", "magenta", "blue", "gray"]
         for color in colors:
             button = QPushButton()
             button.setIcon(self.create_color_icon(color, 25))

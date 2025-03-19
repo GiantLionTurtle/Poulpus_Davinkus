@@ -16,17 +16,18 @@ def draw_triangle(position, painter, size):
 
 def draw_star(position, painter, size):
     points = [
-        QPoint(position.x(), position.y() - size // 2),
-        QPoint(position.x() + size // 4, position.y() - size // 4),
-        QPoint(position.x() + size // 2, position.y() - size // 4),
-        QPoint(position.x() + size // 8, position.y() + size // 8),
-        QPoint(position.x() + size // 4, position.y() + size // 2),
-        QPoint(position.x(), position.y() + size // 4),
-        QPoint(position.x() - size // 4, position.y() + size // 2),
-        QPoint(position.x() - size // 8, position.y() + size // 8),
-        QPoint(position.x() - size // 2, position.y() - size // 4),
-        QPoint(position.x() - size // 4, position.y() - size // 4),
+        QPoint(position.x(), position.y() - size // 2),  
+        QPoint(position.x() + size // 6, position.y() - size // 6),
+        QPoint(position.x() + size // 2, position.y() - size // 6), 
+        QPoint(position.x() + size // 4, position.y() + size // 10),
+        QPoint(position.x() + size // 3, position.y() + size // 2),  
+        QPoint(position.x(), position.y() + size // 4),  
+        QPoint(position.x() - size // 3, position.y() + size // 2), 
+        QPoint(position.x() - size // 4, position.y() + size // 10),
+        QPoint(position.x() - size // 2, position.y() - size // 6),  
+        QPoint(position.x() - size // 6, position.y() - size // 6),
     ]
+    
     painter.drawPolygon(*points)
 
 def draw_splatter(position, painter):

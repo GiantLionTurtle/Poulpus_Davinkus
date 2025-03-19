@@ -18,3 +18,21 @@ class Canvas:
         self.canvas.fill(QColor("white"))
         self.canevas_label.setPixmap(self.canvas)
 
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        
+        # Only redraw the part that needs to be updated
+        painter.drawPixmap(0, 0, self.canvas)  # Draw the existing canvas
+
+        # Draw the vectorial shapes
+        self.shape_layer.draw_shapes(painter)
+        
+        painter.end()
+    
+    def update_canvas(self, rect):
+        """
+        Update only the specific area where the shape was drawn.
+        This method allows selective redrawing by passing the QRect to update.
+        """
+        self.update(rect)
+

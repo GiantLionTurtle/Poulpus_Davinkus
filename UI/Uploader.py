@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QPushButton, QFileDialog, QLabel
 from PyQt6.QtGui import QPixmap, QImage, QPainter
 from PyQt6.QtCore import Qt
-from manip_image import ManipImage
+from manip_image_simple import ManipImage
 import cv2 as cv
 
 class Uploader(QPushButton):
@@ -26,11 +26,7 @@ class Uploader(QPushButton):
         #file_path = os.path.expanduser("~/Documents/School/S4/Projet/lesun.jpg")
         if file_path:
             # Load the image and convert it to a QPixmap from a cv image (numpy array)) test
-            #pixmap = QPixmap(file_path)
-            cv_img = ManipImage(file_path=file_path)
-            cv_img = cv_img.setCvImage()
-            qImg = self.convertCvImageToQtImage(cv_img)
-            pixmap = QPixmap.fromImage(qImg)
+            pixmap = QPixmap(file_path)
             if not pixmap.isNull():
                 # Garde le aspect ratio
                 scaled_pixmap = pixmap.scaled(

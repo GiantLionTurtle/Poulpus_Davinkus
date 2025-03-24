@@ -89,7 +89,8 @@ class MainWindow(QWidget):
         output_path2 = os.path.expanduser("~/Documents/School/S4/Projet/gcode.txt")
 
         cv_img = ManipImageAdvanced(pixmap=self.final_pixmap)
-        cv_img.initalizeImage()
+        cv_img.initalizeImageFromPixmap()
+        cv_img.findContours()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

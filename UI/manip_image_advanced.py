@@ -10,41 +10,61 @@ from matplotlib import pyplot as plt
 class ManipImageAdvanced:
     def __init__(self, pixmap=None):
         self.image = None
+        #Obtained as argument when instancing the class
         self.pixmap = pixmap
 
     def _convertPixmapToCvImage(self, pixmap:QPixmap) -> np.ndarray:
         try:
             qimage = pixmap.toImage()
-            qimage = qimage.convertToFormat(QImage.Format.Format_BGR888) #format for opencv
+            #format for opencv
+            qimage = qimage.convertToFormat(QImage.Format.Format_BGR888)
             width, height = qimage.width(), qimage.height()
             ptr = qimage.bits()
             ptr.setsize(qimage.sizeInBytes())
             arr = np.frombuffer(ptr, dtype=np.uint8)
+            #Change to 4 probably if I want alpha, but should check with pixmap doc if possible
             arr = np.reshape(arr,(height, width, 3))
             return arr
         except Exception as e:
             print(f"Error occured as e:{e}")
 
-    def initalizeImage(self):
-        image = self._convertPixmapToCvImage(self.pixmap)
-        image_rgb = cv.cvtColor(image, cv.COLOR_BGR2RGB)
-        image_hsv = cv.cvtColor(image_rgb, cv.COLOR_RGB2HSV)
-        image_gray = cv.cvtColor(image_rgb, cv.COLOR_RGB2GRAY)
-        contours,hierarchy = cv.findContours(image_gray, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
-        cv.drawContours(image_rgb, contours, -1, (0,255,0), 3)
-        #edges = cv.Canny(image_hsv, 1, 200)
+    def initalizeImageFromPixmap(self):
+        try:
+            image = self._convertPixmapToCvImage(self.pixmap)
+            #Convert to HSV format
+            image_hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
+            self.image = image_hsv
+        except Exception as e:
+            print(f"Error occured as:{e}")
 
-        #Hough Transform
-        # lines = cv.HoughLinesP(edges, 1, np.pi/180, 68, minLineLength=1, maxLineGap=250)
-        # # Draw lines on the image
-        # for line in lines:
-        #     x1, y1, x2, y2 = line[0]
-        #     cv.line(image_hsv, (x1, y1), (x2, y2), (255, 255, 255), 3)
+    def transparentBackground(self):
+        if self.image is None:
+            raise ValueError("Must run intializeImageFromPixmap first")
+        #If the image has 4 channels, it has an alpha channel (means transparent background)
+        if self.image.shape[2] == 4:
+            return 1
+        else:
+            return 0
 
-        self.image = image_hsv
+    def findContours(self):
+        if self.image is None:
+            raise ValueError("Must run intializeImageFromPixmap first")
+        if self.transparentBackground():
+            #Obtain the alpha channel to use for masks
+            alpha = self.image[:,:,3]
+        
+        #Image to use locally
+        image_hsv = self.image
 
+        #Bounds to change with sliders, but static for now
+        lower_bound = np.array([0, 0, 50])
+        upper_bound = np.array([10, 255, 255])
+        #Use different masks depending on the different colors in an image generated automatically?
+        mask = cv.inRange(image_hsv, lower_bound, upper_bound)
+
+        #Visualize the image with contours to see if it works well
         plt.figure()
-        plt.imshow(image_rgb)
+        plt.imshow(mask)
         plt.show()
 
     
@@ -68,9 +88,9 @@ class ManipImageAdvanced:
             for line in gcode:
                 txt_file.write("".join(line) + "\n")
 
-        #Peut-etre utile dans le futur
-        # #Bounds to change with sliders, but static for now
-        # lower_bound = np.array([0, 0, 50])
-        # upper_bound = np.array([10, 120, 150])
-        # #Use different masks depending on the different colors in an image generated automatically?
-        # mask = cv.inRange(image_hsv, lower_bound, upper_bound)
+        #Hough Transform
+        # lines = cv.HoughLinesP(edges, 1, np.pi/180, 68, minLineLength=1, maxLineGap=250)
+        # # Draw lines on the image
+        # for line in lines:
+        #     x1, y1, x2, y2 = line[0]
+        #     cv.line(image_hsv, (x1, y1), (x2, y2), (255, 255, 255), 3)

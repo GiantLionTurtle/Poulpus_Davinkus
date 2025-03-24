@@ -87,10 +87,10 @@ class Window(QMainWindow):
         button_layout.addWidget(self.undo_button)
 
         # Bouton pour exporter les formes en G-code
-        self.export_button = QPushButton("Export G-code")
-        self.export_button.clicked.connect(self.export_gcode)
-        self.export_button.setFixedSize(150, 40)
-        button_layout.addWidget(self.export_button)
+        # self.export_button = QPushButton("Export G-code")
+        # self.export_button.clicked.connect(self.export_gcode)
+        # self.export_button.setFixedSize(150, 40)
+        # button_layout.addWidget(self.export_button)
 
         button_container.setLayout(button_layout)
         main_layout.addWidget(button_container, 2, 1, 1, 2, Qt.AlignmentFlag.AlignCenter)
@@ -168,16 +168,16 @@ class Window(QMainWindow):
         self.shapes.clear()
         self.history.clear()
 
-    def export_gcode(self):
-        gcode_commands = []
-        for shape, position, color in self.shapes:
-            x = position.x()
-            y = position.y()
-            gcode_commands.append(f"SHAPE {shape} X{x} Y{y} COLOR {color}")
+    # def export_gcode(self):
+    #     gcode_commands = []
+    #     for shape, position, color in self.shapes:
+    #         x = position.x()
+    #         y = position.y()
+    #         gcode_commands.append(f"SHAPE {shape} X{x} Y{y} COLOR {color}")
 
-        with open("output.gcode", "w") as f:
-            f.write("\n".join(gcode_commands))
-        print("G-code exported to output.gcode")
+    #     with open("output.gcode", "w") as f:
+    #         f.write("\n".join(gcode_commands))
+    #     print("G-code exported to output.gcode")
 
     def undo(self):
         if self.shapes:  

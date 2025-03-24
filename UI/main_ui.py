@@ -1,7 +1,8 @@
 from PyQt6.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog
 from PyQt6.QtGui import QPixmap, QPainter, QImage
 from PyQt6.QtCore import Qt
-from manip_image import ManipImage
+from manip_image_simple import ManipImage
+from manip_image_advanced import ManipImageAdvanced
 import cv2 as cv
 import sys
 import os
@@ -28,11 +29,16 @@ class MainWindow(QWidget):
         self.test_analysis_button = QPushButton("Test", self)
         self.test_analysis_button.clicked.connect(self.test_analysis)
 
+        #Button to test advanced image analysis from pixmap
+        self.test_analysis_button_2 = QPushButton("Test2", self)
+        self.test_analysis_button_2.clicked.connect(self.testAnalysis2)
+
         # Ajouter les widgets
         layout = QVBoxLayout()
         layout.addWidget(self.image_label)
         layout.addWidget(self.upload_button)
         layout.addWidget(self.test_analysis_button)
+        layout.addWidget(self.test_analysis_button_2)
         self.setLayout(layout)
 
     def upload_image(self):
@@ -75,8 +81,16 @@ class MainWindow(QWidget):
         cv_img = ManipImage(pixmap=self.final_pixmap)
         cv_img.load_image()
         cv_img.analyze_image()
-        cv_img.draw_circles(output_path)
-        cv_img.convert_gcode(output_path2)
+        cv_img.draw_circles(output_path, (400, 600), "white")
+        cv_img.convert_gcode(output_path2, (216, 279), (400, 600))
+
+    def testAnalysis2(self):
+        output_path = os.path.expanduser("~/Documents/School/S4/Projet/output.png")
+        output_path2 = os.path.expanduser("~/Documents/School/S4/Projet/gcode.txt")
+
+        cv_img = ManipImageAdvanced(pixmap=self.final_pixmap)
+        cv_img.initalizeImageFromPixmap()
+        cv_img.findContours()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

@@ -17,7 +17,6 @@ class Window(QMainWindow):
         screen_geometry = QApplication.primaryScreen().availableGeometry()
         self.setGeometry(screen_geometry)
 
-        # Set ocean-themed gradient background for the main window
         self.set_ocean_gradient_background()
 
         self.current_shape = "Line"
@@ -35,8 +34,8 @@ class Window(QMainWindow):
 
         # Ajustement des colones/rangées pour avoiur une belle mise en page facile à comprendre
         main_layout.setColumnStretch(0, 1)  # Bouton des formes
-        #main_layout.setColumnStretch(1, 1)  # Boutons de couleurs
-        main_layout.setColumnStretch(2, 3)  # Toile de gauche
+        main_layout.setColumnStretch(1, 1)  # Boutons de couleurs
+        main_layout.setColumnStretch(2, 1)  # Toile de gauche
         main_layout.setColumnStretch(3, 1)  # Espace entre les 2 toiles
         main_layout.setColumnStretch(4, 3)  # Toile de droite
         main_layout.setColumnStretch(5, 2)  # Espace entre la toile de droite et la bordure
@@ -47,8 +46,8 @@ class Window(QMainWindow):
 
         # Boutons couleur
         self.color_picker = ColorPicker(self)
-        main_layout.addWidget(self.color_picker.color_container, 0, 1, 1, 2)
-
+        main_layout.addWidget(self.color_picker.color_container, 0, 1, 1, 2, Qt.AlignmentFlag.AlignCenter & Qt.AlignmentFlag.AlignJustify)
+  
         # Boutons formes
         self.side_buttons_container = QWidget()
         side_buttons_layout = QVBoxLayout()
@@ -59,15 +58,17 @@ class Window(QMainWindow):
             btn.clicked.connect(partial(self.set_shape, shape))
             side_buttons_layout.addWidget(btn)
         self.side_buttons_container.setLayout(side_buttons_layout)
-        main_layout.addWidget(self.side_buttons_container, 1, 0, 1, 1)
+        main_layout.addWidget(self.side_buttons_container, 1, 0, 1, 1, Qt.AlignmentFlag.AlignCenter & Qt.AlignmentFlag.AlignJustify)
 
         self.left_canvas = Canvas(self)
         self.left_label = self.left_canvas.canevas_label
-        main_layout.addWidget(self.left_label, 1, 1, 1, 2)
+        self.left_label.setFixedSize(400, 600)
+        main_layout.addWidget(self.left_label, 1, 1, 1, 2, Qt.AlignmentFlag.AlignCenter)
 
         self.right_canvas = Canvas(self)
         self.right_label = self.right_canvas.canevas_label
-        main_layout.addWidget(self.right_label, 1, 4, 1, 2)
+        self.right_label.setFixedSize(400, 600)
+        main_layout.addWidget(self.right_label, 1, 4, 1, 2, Qt.AlignmentFlag.AlignCenter)
 
         # coutainer du bouton en dessous de la toile de gauche
         button_container = QWidget()
@@ -92,7 +93,7 @@ class Window(QMainWindow):
         button_layout.addWidget(self.export_button)
 
         button_container.setLayout(button_layout)
-        main_layout.addWidget(button_container, 2, 1, 1, 2)
+        main_layout.addWidget(button_container, 2, 1, 1, 2, Qt.AlignmentFlag.AlignCenter)
 
         # Bouton qui permet de changer le mode d'utilisation de l'intertface
         mode_button = QPushButton("Change mode")
@@ -102,16 +103,13 @@ class Window(QMainWindow):
 
         # Bouton qui permet de télécharger une image
         self.uploader = Uploader(self.left_label)
-        main_layout.addWidget(self.uploader, 0, 2, 1, 1)
+        main_layout.addWidget(self.uploader, 0, 1, 1, 2, Qt.AlignmentFlag.AlignHCenter)
         self.uploader.hide()
 
         self.pen = QPen(QColor("black"))
         self.pen.setWidth(6)
 
     def set_ocean_gradient_background(self):
-        """
-        Set an ocean-themed gradient background for the main window.
-        """
         gradient = QLinearGradient(0, 0, 0, self.height())
         gradient.setColorAt(0, QColor(0, 105, 148))
         gradient.setColorAt(1, QColor(0, 191, 255))  
@@ -129,9 +127,9 @@ class Window(QMainWindow):
     def draw_bubbles(self, painter):
 
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(QBrush(QColor(173, 216, 230, 150)))  # Light blue with transparency
+        painter.setBrush(QBrush(QColor(173, 216, 230, 150)))  # Bleu pale pour faire comme transparent
 
-        for _ in range(25):  # Draw 20 bubbles
+        for _ in range(25): 
             diameter = random.randint(20, 50)
             x = random.randint(0, self.width())
             y = random.randint(0, self.height())
@@ -148,18 +146,18 @@ class Window(QMainWindow):
         self.clear_canvas()
         if self.current_mode == "Drawing":
             self.current_mode = "Image"
-            self.side_buttons_container.hide()
-            self.color_picker.color_container.hide()
-            self.uploader.show()
-            self.undo_button.hide()
-            self.export_button.hide()
+            self.side_buttons_container.setVisible(False)
+            self.color_picker.color_container.setVisible(False)
+            self.uploader.setVisible(True)
+            self.undo_button.setVisible(False)
+            self.export_button.setVisible(False)
         else:
             self.current_mode = "Drawing"
-            self.side_buttons_container.show()
-            self.color_picker.color_container.show()
-            self.uploader.hide()
-            self.undo_button.show()
-            self.export_button.show()
+            self.side_buttons_container.setVisible(True)
+            self.color_picker.color_container.setVisible(True)
+            self.uploader.setVisible(False)
+            self.undo_button.setVisible(True)
+            self.export_button.setVisible(True)
             
 
     def set_shape(self, shape):
@@ -226,17 +224,6 @@ class Window(QMainWindow):
             draw_star(position, painter, 50)
         elif shape == "Ink":
             draw_splatter(position, painter)
-
-    # def mouseMoveEvent(self, event):
-    #     if self.current_mode == "Drawing" and self.current_shape == "Line" and self.previousPoint:
-    #         position = self.left_label.mapFrom(self, event.pos())
-    #         painter = QPainter(self.left_canvas.canvas)
-    #         self.pen.setColor(self.current_color)
-    #         painter.setPen(self.pen)
-    #         painter.drawLine(self.previousPoint, position)
-    #         painter.end()
-    #         self.left_label.setPixmap(self.left_canvas.canvas)
-    #         self.previousPoint = position
 
 
 if __name__ == "__main__":

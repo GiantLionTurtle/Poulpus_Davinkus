@@ -7,7 +7,7 @@ import cv2 as cv
 class Uploader(QPushButton):
     def __init__(self, image_label, parent=None):
         super().__init__("Upload an image", parent)
-        self.setFixedSize(150, 40)
+        self.setFixedSize(150, 35)
         self.image_label = image_label  # QLabel where the image will be displayed
         self.clicked.connect(self.upload_image)  # Connect button click to function
 

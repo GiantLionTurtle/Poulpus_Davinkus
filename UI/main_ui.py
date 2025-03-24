@@ -9,6 +9,7 @@ import os
 
 #Class pour upload une image
 class MainWindow(QWidget):
+    
     def __init__(self):
         super().__init__()
         self.initUI()
@@ -76,8 +77,8 @@ class MainWindow(QWidget):
                 self.image_label.setText("Failed to load image!")
     
     def test_analysis(self):
-        output_path = os.path.expanduser("~/Documents/School/S4/Projet/output.png")
-        output_path2 = os.path.expanduser("~/Documents/School/S4/Projet/gcode.txt")
+        output_path = os.path.abspath("C:/S4-Projet/Poulpus_Davinkus/UI/output.png")
+        output_path2 = os.path.abspath("C:/S4-Projet/Poulpus_Davinkus/UI/outputgcode.txt")
         cv_img = ManipImage(pixmap=self.final_pixmap)
         cv_img.load_image()
         cv_img.analyze_image()

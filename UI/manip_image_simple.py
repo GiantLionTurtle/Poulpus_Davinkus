@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QWid
 from PyQt6.QtGui import QPixmap, QPainter, QImage
 from PyQt6.QtCore import Qt
 from dataclasses import dataclass
+from matplotlib import pyplot as plt
     
 
 class ManipImage:
@@ -74,7 +75,10 @@ class ManipImage:
             )
 
         # Save the output
-        output_image.save(output_path)
+        plt.figure()
+        plt.imshow(output_image)
+        plt.show()
+        #output_image.save(output_path)
     
     def convert_gcode(self, output_path, paper_size, image_size):
     

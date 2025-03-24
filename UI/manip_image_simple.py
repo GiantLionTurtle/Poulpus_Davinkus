@@ -32,17 +32,6 @@ class ManipImage:
             return arr
         except Exception as e:
             print(f"Error occured as e:{e}") 
-<<<<<<< HEAD:UI/manip_image.py
-    
-    #old function, use load_image instead
-    def setCvImage(self):
-        try:
-            self.image = cv.imread(self.file_path)
-            return self.image
-        except Exception as e:
-            print(f"Error occured as e:{e}")
-=======
->>>>>>> analyse:UI/manip_image_simple.py
 
     def load_image(self):
         self.image = self._convertPixmapToCvImage(self.pixmap)

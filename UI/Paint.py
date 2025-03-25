@@ -37,6 +37,7 @@ class Window(QMainWindow):
             "Canadiens": os.getcwd() + "/Images/canadiens_logo.png",
             "Capybara": os.getcwd() + "/Images/capybara.png",
             "Poulpe": os.getcwd() + "/Images/Poulpus_Davinkus.jpg",
+            "Pikachu": os.getcwd() + "/Images/fat_pikachu.png",
     # "Shrek": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/shrek",
     # "Heart": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/heart",
     # "Nemo": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/nemo",

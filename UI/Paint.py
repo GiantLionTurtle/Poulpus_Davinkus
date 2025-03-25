@@ -1,9 +1,12 @@
-from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout
+from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout, QComboBox
 from PyQt6.QtGui import QPixmap, QPainter, QPen, QColor, QBrush, QPalette, QLinearGradient
 from PyQt6.QtCore import Qt, QPoint
 from functools import partial
 import sys
+import os
 from Uploader import Uploader
+from manip_image_advanced import ManipImageAdvanced
+from manip_image_simple import ManipImage
 from Shapes import draw_circle, draw_splatter, draw_square, draw_star, draw_triangle
 from Colors import ColorPicker
 from Canvas import Canvas
@@ -24,7 +27,17 @@ class Window(QMainWindow):
         self.current_color = QColor("black")
         self.previousPoint = None
         self.shapes = []  
-        self.history = [] 
+        self.history = []
+        self.image_path = None
+
+        self.image_paths = {
+    "Shrek": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/shrek",
+    "Heart": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/heart",
+    "Nemo": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/nemo",
+    "Canadiens": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/canadien_logo",
+    "Capybara": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/capybara",
+    "Poulpe": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/Poulpus_Davinkus",
+}
         
         # Main container
         central_widget = QWidget(self)
@@ -101,13 +114,56 @@ class Window(QMainWindow):
         mode_button.setFixedSize(150, 40)
         main_layout.addWidget(mode_button, 0, 5, 1, 1)
 
-        # Bouton qui permet de télécharger une image
+        #self.manip_image = ManipImage()
+        self.analyze_button = QPushButton("Go")
+        self.analyze_button.clicked.connect(self.test_analyze)
+        self.analyze_button.setFixedSize(150, 40)
+        main_layout.addWidget(self.analyze_button, 0, 1, 1, 1, Qt.AlignmentFlag.AlignHCenter)
+        self.analyze_button.hide()
+
+
+        
+
+        self.image_selector = QComboBox()
+        self.image_selector.addItems(["Select an image", "Shrek", "Heart", "Nemo", "Canadiens", "Capybara", "Poulpe"])
+        main_layout.addWidget(self.image_selector, 0, 0, 1, 1, Qt.AlignmentFlag.AlignHCenter)
+        self.image_selector.hide()
+        self.image_selector.currentTextChanged.connect(self.text_change)
         self.uploader = Uploader(self.left_label)
-        main_layout.addWidget(self.uploader, 0, 1, 1, 2, Qt.AlignmentFlag.AlignHCenter)
-        self.uploader.hide()
 
         self.pen = QPen(QColor("black"))
         self.pen.setWidth(6)
+
+    def text_change(self, s):
+        self.image_path = self.image_paths.get(s)
+        if self.image_path:
+            self.uploader.upload_image(self.image_path)
+
+    def test_analyze(self):
+        output_path = os.path.abspath("C:/S4-Projet/Poulpus_Davinkus/UI/output.png")
+        output_path2 = os.path.abspath("C:/S4-Projet/Poulpus_Davinkus/UI/outputgcode.txt")
+        
+        # Get the pixmap from the uploader
+        pixmap = self.uploader.get_pixmap()
+        if pixmap is None:
+            print("Error: No image uploaded.")
+            return
+        cv_img = ManipImage(pixmap=pixmap, file_path=self.image_path)
+        cv_img.load_image()
+        cv_img.analyze_image()
+        cv_img.draw_circles(output_path, (400, 600), "white")
+        cv_img.convert_gcode(output_path2, (216, 279), (400, 600))
+        
+        # Assign pixmap and process the image
+        # self.manip_image.pixmap = pixmap
+        # self.manip_image.load_image()
+        # self.manip_image.analyze_image()
+        # self.manip_image.draw_circles(output_path, (400, 600), "white")
+        # self.manip_image.convert_gcode(output_path2, (216, 279), (400, 600))
+        
+        print("Analysis completed, outputs saved.")
+
+
 
     def set_ocean_gradient_background(self):
         gradient = QLinearGradient(0, 0, 0, self.height())
@@ -136,9 +192,6 @@ class Window(QMainWindow):
             painter.drawEllipse(x, y, diameter, diameter)
 
     def resizeEvent(self, event):
-        """
-        Update the gradient background when the window is resized.
-        """
         self.set_ocean_gradient_background()
         super().resizeEvent(event)
 
@@ -148,16 +201,24 @@ class Window(QMainWindow):
             self.current_mode = "Image"
             self.side_buttons_container.setVisible(False)
             self.color_picker.color_container.setVisible(False)
-            self.uploader.setVisible(True)
+            #self.uploader.setVisible(True)
             self.undo_button.setVisible(False)
             self.export_button.setVisible(False)
+            self.image_selector.setVisible(True)
+            self.analyze_button.setVisible(True)
+            self.image_path = None
+            self.image_selector.setCurrentIndex(0)
+            
         else:
             self.current_mode = "Drawing"
             self.side_buttons_container.setVisible(True)
             self.color_picker.color_container.setVisible(True)
-            self.uploader.setVisible(False)
+            #self.uploader.setVisible(False)
             self.undo_button.setVisible(True)
             self.export_button.setVisible(True)
+            self.image_selector.setVisible(False)
+            self.analyze_button.setVisible(False)
+            self.image_path = None
             
 
     def set_shape(self, shape):
@@ -206,9 +267,6 @@ class Window(QMainWindow):
             if self.current_shape in ["Circle", "Square", "Triangle", "Star", "Ink"]:
                 self.shapes.append((self.current_shape, position, self.current_color.name()))
                 self.draw_shape(self.current_shape, position, painter)
-
-            # elif self.current_shape == "Line":
-            #     self.previousPoint = position
 
             painter.end()
             self.left_label.setPixmap(self.left_canvas.canvas)

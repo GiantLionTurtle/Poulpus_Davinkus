@@ -206,6 +206,8 @@ class Window(QMainWindow):
             self.export_button.setVisible(False)
             self.image_selector.setVisible(True)
             self.analyze_button.setVisible(True)
+            self.image_path = None
+            self.image_selector.setCurrentIndex(0)
             
         else:
             self.current_mode = "Drawing"
@@ -216,6 +218,7 @@ class Window(QMainWindow):
             self.export_button.setVisible(True)
             self.image_selector.setVisible(False)
             self.analyze_button.setVisible(False)
+            self.image_path = None
             
 
     def set_shape(self, shape):

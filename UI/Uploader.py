@@ -14,6 +14,7 @@ class Uploader:
     #     self.clicked.connect(self.upload_image)  # Connect button click to function
 
     def convertCvImageToQtImage(cv_img):
+
         height, width = cv_img.shape[:2]
         cv_img = cv.cvtColor(cv_img, cv.COLOR_BGR2RGB)
         bytesPerLine = 3 * width
@@ -54,5 +55,8 @@ class Uploader:
                     self.final_pixmap = final_pixmap       
                 else:
                     self.image_label.setText("Failed to load image!")
+
+    def get_pixmap(self):
+         return self.final_pixmap
 
     

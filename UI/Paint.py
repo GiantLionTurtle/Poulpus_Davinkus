@@ -31,12 +31,18 @@ class Window(QMainWindow):
         self.image_path = None
 
         self.image_paths = {
-    "Shrek": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/shrek",
-    "Heart": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/heart",
-    "Nemo": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/nemo",
-    "Canadiens": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/canadien_logo",
-    "Capybara": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/capybara",
-    "Poulpe": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/Poulpus_Davinkus",
+            "Shrek": os.getcwd() + "/Images/shrek.png",
+            "Heart": os.getcwd() + "/Images/heart.png",
+            "Nemo": os.getcwd() + "/Images/nemo.png",
+            "Canadiens": os.getcwd() + "/Images/canadiens_logo.png",
+            "Capybara": os.getcwd() + "/Images/capybara.png",
+            "Poulpe": os.getcwd() + "/Images/Poulpus_Davinkus.jpg",
+    # "Shrek": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/shrek",
+    # "Heart": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/heart",
+    # "Nemo": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/nemo",
+    # "Canadiens": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/canadien_logo",
+    # "Capybara": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/capybara",
+    # "Poulpe": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/Poulpus_Davinkus",
 }
         
         # Main container
@@ -148,18 +154,12 @@ class Window(QMainWindow):
         if pixmap is None:
             print("Error: No image uploaded.")
             return
-        cv_img = ManipImage(pixmap=pixmap, file_path=self.image_path)
-        cv_img.load_image()
-        cv_img.analyze_image()
-        cv_img.draw_circles(output_path, (400, 600), "white")
-        cv_img.convert_gcode(output_path2, (216, 279), (400, 600))
-        
-        # Assign pixmap and process the image
-        # self.manip_image.pixmap = pixmap
-        # self.manip_image.load_image()
-        # self.manip_image.analyze_image()
-        # self.manip_image.draw_circles(output_path, (400, 600), "white")
-        # self.manip_image.convert_gcode(output_path2, (216, 279), (400, 600))
+        cv_img = ManipImageAdvanced(pixmap=pixmap, file_path=self.image_path)
+        cv_img.initalizeImageFromPixmap()
+        cv_img.getImageName()
+        #cv_img.findContours()
+        #cv_img.draw_circles(output_path, (400, 600), "white")
+        #cv_img.convert_gcode(output_path2, (216, 279), (400, 600))
         
         print("Analysis completed, outputs saved.")
 
@@ -203,7 +203,7 @@ class Window(QMainWindow):
             self.color_picker.color_container.setVisible(False)
             #self.uploader.setVisible(True)
             self.undo_button.setVisible(False)
-            self.export_button.setVisible(False)
+            #self.export_button.setVisible(False)
             self.image_selector.setVisible(True)
             self.analyze_button.setVisible(True)
             self.image_path = None
@@ -215,7 +215,7 @@ class Window(QMainWindow):
             self.color_picker.color_container.setVisible(True)
             #self.uploader.setVisible(False)
             self.undo_button.setVisible(True)
-            self.export_button.setVisible(True)
+            #self.export_button.setVisible(True)
             self.image_selector.setVisible(False)
             self.analyze_button.setVisible(False)
             self.image_path = None

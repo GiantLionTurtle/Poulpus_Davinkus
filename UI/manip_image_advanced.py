@@ -6,13 +6,14 @@ from PyQt6.QtGui import QPixmap, QPainter, QImage
 from PyQt6.QtCore import Qt
 from dataclasses import dataclass
 from matplotlib import pyplot as plt
+import os
 
 class ManipImageAdvanced:
     def __init__(self, pixmap=None, file_path=None):
         self.image = None
         #Obtained as argument when instancing the class
         self.pixmap = pixmap
-        self.file_path = None
+        self.file_path = file_path
 
     def _convertPixmapToCvImage(self, pixmap:QPixmap) -> np.ndarray:
         try:
@@ -28,6 +29,13 @@ class ManipImageAdvanced:
             return arr
         except Exception as e:
             print(f"Error occured as e:{e}")
+
+    def getImageName(self):
+        try:
+            #print(os.path.basename(os.path.normpath(self.file_path)))
+            return os.path.basename(os.path.normpath(self.file_path)) #format suivant: heart.png
+        except Exception as e:
+            print(f"Error occured trying to get image name as:{e}")
 
     def initalizeImageFromPixmap(self):
         try:

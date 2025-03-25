@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout
+from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout, QComboBox
 from PyQt6.QtGui import QPixmap, QPainter, QPen, QColor, QBrush, QPalette, QLinearGradient
 from PyQt6.QtCore import Qt, QPoint
 from functools import partial
@@ -24,7 +24,17 @@ class Window(QMainWindow):
         self.current_color = QColor("black")
         self.previousPoint = None
         self.shapes = []  
-        self.history = [] 
+        self.history = []
+        self.image_path = None
+
+        self.image_paths = {
+    "Shrek": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/shrek",
+    "Heart": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/heart",
+    "Nemo": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/nemo",
+    "Canadiens": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/canadien_logo",
+    "Capybara": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/capybara",
+    "Poulpe": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/Poulpus_Davinkus",
+}
         
         # Main container
         central_widget = QWidget(self)
@@ -102,12 +112,26 @@ class Window(QMainWindow):
         main_layout.addWidget(mode_button, 0, 5, 1, 1)
 
         # Bouton qui permet de télécharger une image
+        # self.uploader = Uploader(self.left_label)
+        # main_layout.addWidget(self.uploader, 0, 1, 1, 2, Qt.AlignmentFlag.AlignHCenter)
+        # self.uploader.hide()
+
+        self.image_selector = QComboBox()
+        self.image_selector.addItems(["Select an image", "Shrek", "Heart", "Nemo", "Canadiens", "Capybara", "Poulpe"])
+        main_layout.addWidget(self.image_selector, 0, 0, 1, 2, Qt.AlignmentFlag.AlignHCenter)
+        self.image_selector.hide()
+        self.image_selector.currentTextChanged.connect(self.text_change)
         self.uploader = Uploader(self.left_label)
-        main_layout.addWidget(self.uploader, 0, 1, 1, 2, Qt.AlignmentFlag.AlignHCenter)
-        self.uploader.hide()
 
         self.pen = QPen(QColor("black"))
         self.pen.setWidth(6)
+
+    def text_change(self, s):
+        self.image_path = self.image_paths.get(s)
+        if self.image_path:
+            self.uploader.upload_image(self.image_path)
+
+
 
     def set_ocean_gradient_background(self):
         gradient = QLinearGradient(0, 0, 0, self.height())
@@ -136,9 +160,6 @@ class Window(QMainWindow):
             painter.drawEllipse(x, y, diameter, diameter)
 
     def resizeEvent(self, event):
-        """
-        Update the gradient background when the window is resized.
-        """
         self.set_ocean_gradient_background()
         super().resizeEvent(event)
 
@@ -148,16 +169,18 @@ class Window(QMainWindow):
             self.current_mode = "Image"
             self.side_buttons_container.setVisible(False)
             self.color_picker.color_container.setVisible(False)
-            self.uploader.setVisible(True)
+            #self.uploader.setVisible(True)
             self.undo_button.setVisible(False)
             self.export_button.setVisible(False)
+            self.image_selector.setVisible(True)
         else:
             self.current_mode = "Drawing"
             self.side_buttons_container.setVisible(True)
             self.color_picker.color_container.setVisible(True)
-            self.uploader.setVisible(False)
+            #self.uploader.setVisible(False)
             self.undo_button.setVisible(True)
             self.export_button.setVisible(True)
+            self.image_selector.setVisible(False)
             
 
     def set_shape(self, shape):
@@ -206,9 +229,6 @@ class Window(QMainWindow):
             if self.current_shape in ["Circle", "Square", "Triangle", "Star", "Ink"]:
                 self.shapes.append((self.current_shape, position, self.current_color.name()))
                 self.draw_shape(self.current_shape, position, painter)
-
-            # elif self.current_shape == "Line":
-            #     self.previousPoint = position
 
             painter.end()
             self.left_label.setPixmap(self.left_canvas.canvas)

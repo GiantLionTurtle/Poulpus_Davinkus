@@ -11,7 +11,7 @@ import os
 class ManipImageAdvanced:
     def __init__(self, pixmap=None, file_path=None):
         self.image = None
-        #Obtained as argument when instancing the class
+        #Obtained as arguments when instancing the class
         self.pixmap = pixmap
         self.file_path = file_path
 
@@ -33,7 +33,7 @@ class ManipImageAdvanced:
     def getImageName(self):
         try:
             #print(os.path.basename(os.path.normpath(self.file_path)))
-            return os.path.basename(os.path.normpath(self.file_path)) #format suivant: heart.png
+            return os.path.basename(os.path.normpath(self.file_path)) #returns following this format: heart.png
         except Exception as e:
             print(f"Error occured trying to get image name as:{e}")
 
@@ -54,28 +54,49 @@ class ManipImageAdvanced:
             return 1
         else:
             return 0
+        #To implement later if pixmap allows for 4 channels
+        # if self.transparentBackground():
+        #     #Obtain the alpha channel to use for masks
+        #     alpha = self.image[:,:,3]
 
-    def findContours(self):
+    def applyMaskOnImage(self):
         if self.image is None:
             raise ValueError("Must run intializeImageFromPixmap first")
-        if self.transparentBackground():
-            #Obtain the alpha channel to use for masks
-            alpha = self.image[:,:,3]
-        
-        #Image to use locally
         image_hsv = self.image
+        if(self.getImageName() == "heart.png"):
+            lower_bound = np.array([0, 0, 50])
+            upper_bound = np.array([20, 255, 255])
+            mask_red = cv.inRange(image_hsv, lower_bound, upper_bound)
+            lower_bound2 = np.array([0, 0, 200])
+            upper_bound2 = np.array([180, 210, 255])
+            mask_white = cv.inRange(image_hsv, lower_bound2, upper_bound2)
+            masked_image = cv.subtract(mask_red, mask_white)
+        elif(self.getImageName() == "shrek.png"):
+            lower_bound = np.array([0, 0, 50])
+            upper_bound = np.array([10, 255, 255])
+            mask_green = cv.inRange(image_hsv, lower_bound, upper_bound)
+            masked_image = cv.bitwise_and(image_hsv, image_hsv, mask=mask_green)
+        elif(self.getImageName() == "nemo.png"):
+            lower_bound = np.array([0, 0, 50])
+            upper_bound = np.array([10, 255, 255])
+        elif(self.getImageName() == "canadiens_logo.png"):
+            lower_bound = np.array([0, 0, 50])
+            upper_bound = np.array([10, 255, 255])
+        elif(self.getImageName() == "capybara.png"):
+            lower_bound = np.array([0, 0, 50])
+            upper_bound = np.array([10, 255, 255])
+        elif(self.getImageName() == "Poulpus_Davinkus.jpg"):
+            lower_bound = np.array([0, 0, 50])
+            upper_bound = np.array([10, 255, 255])
+        elif(self.getImageName() == "fat_pikachu.png"):
+            lower_bound = np.array([0, 0, 50])
+            upper_bound = np.array([10, 255, 255])
 
-        #Bounds to change with sliders, but static for now
-        lower_bound = np.array([0, 0, 50])
-        upper_bound = np.array([10, 255, 255])
-        #Use different masks depending on the different colors in an image generated automatically?
-        mask = cv.inRange(image_hsv, lower_bound, upper_bound)
-
-        #Visualize the image with contours to see if it works well
         plt.figure()
-        plt.imshow(mask)
+        plt.imshow(masked_image)
         plt.show()
 
+        self.image = masked_image
     
     
     def convertGcode(self, output_path, paper_size, image_size):

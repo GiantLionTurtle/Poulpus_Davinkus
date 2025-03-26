@@ -157,8 +157,7 @@ class Window(QMainWindow):
             return
         cv_img = ManipImageAdvanced(pixmap=pixmap, file_path=self.image_path)
         cv_img.initalizeImageFromPixmap()
-        cv_img.getImageName()
-        #cv_img.findContours()
+        cv_img.applyMaskOnImage()
         #cv_img.draw_circles(output_path, (400, 600), "white")
         #cv_img.convert_gcode(output_path2, (216, 279), (400, 600))
         

@@ -1,5 +1,5 @@
-from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout, QComboBox
-from PyQt6.QtGui import QPixmap, QPainter, QPen, QColor, QBrush, QPalette, QLinearGradient, QIcon
+from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout, QComboBox, QToolBar, QFileDialog
+from PyQt6.QtGui import QPixmap, QPainter, QPen, QColor, QBrush, QPalette, QLinearGradient, QIcon, QAction
 from PyQt6.QtCore import Qt, QPoint
 from functools import partial
 import sys
@@ -11,15 +11,16 @@ from Shapes import draw_circle, draw_splatter, draw_square, draw_star, draw_tria
 from Colors import ColorPicker
 from Canvas import Canvas
 import random
+import re
 
 class Window(QMainWindow):
     def __init__(self):
         super().__init__()
-        
+
+        #Création de la fenêtre principal
         self.setWindowTitle("Poulpus Davinkus")
         screen_geometry = QApplication.primaryScreen().availableGeometry()
         self.setGeometry(screen_geometry)
-
         self.set_ocean_gradient_background()
 
         self.current_shape = "Line"
@@ -29,7 +30,9 @@ class Window(QMainWindow):
         self.shapes = []  
         self.history = []
         self.image_path = None
-
+        self.drwing_path = None
+        
+        #Paths des différentes imagesdispo dans la banque
         self.image_paths = {
     "Shrek": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/shrek",
     "Heart": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/heart",
@@ -37,6 +40,11 @@ class Window(QMainWindow):
     "Canadiens": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/canadien_logo",
     "Capybara": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/capybara",
     "Poulpe": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/Poulpus_Davinkus",
+}
+        self.drawing_paths = {
+    "Foret": "C:/S4-Projet/Poulpus_Davinkus/drawings/foret.txt",
+    "Chat": "C:/S4-Projet/Poulpus_Davinkus/drawings/chat.txt",
+    "Voiture": "C:/S4-Projet/Poulpus_Davinkus/drawings/voiture.txt"
 }
         
         # Main container
@@ -57,11 +65,21 @@ class Window(QMainWindow):
         main_layout.setRowStretch(1, 4)  # Toiles + formes (milieu)
         main_layout.setRowStretch(2, 1)  # Boutons en bas (bas)
 
-        # Boutons couleur
+        # toolbar = QToolBar("Option")
+        # self.addToolBar(toolbar)
+    
+        menu = self.menuBar()
+        option_menu = menu.addMenu("Options")
+        save_drawing_button = QAction("Save drawing", self)
+        save_drawing_button.setStatusTip("Save the current drawing")
+        save_drawing_button.triggered.connect(self.save_drawing)
+        option_menu.addAction(save_drawing_button)
+
+        # Boutons des différentes couleurs
         self.color_picker = ColorPicker(self)
         main_layout.addWidget(self.color_picker.color_container, 0, 1, 1, 2, Qt.AlignmentFlag.AlignCenter & Qt.AlignmentFlag.AlignJustify)
   
-        # Boutons formes
+        # Boutons des différentes formes
         self.side_buttons_container = QWidget()
         side_buttons_layout = QVBoxLayout()
         shapes = ["Square", "Triangle", "Circle", "Ink", "Star"]
@@ -73,11 +91,13 @@ class Window(QMainWindow):
         self.side_buttons_container.setLayout(side_buttons_layout)
         main_layout.addWidget(self.side_buttons_container, 1, 0, 1, 1, Qt.AlignmentFlag.AlignCenter & Qt.AlignmentFlag.AlignJustify)
 
+        #Toile de gauche
         self.left_canvas = Canvas(self)
         self.left_label = self.left_canvas.canevas_label
         self.left_label.setFixedSize(400, 600)
         main_layout.addWidget(self.left_label, 1, 1, 1, 2, Qt.AlignmentFlag.AlignCenter)
 
+        #Toile de droite
         self.right_canvas = Canvas(self)
         self.right_label = self.right_canvas.canevas_label
         self.right_label.setFixedSize(400, 600)
@@ -100,7 +120,7 @@ class Window(QMainWindow):
         button_layout.addWidget(self.undo_button)
 
         # Bouton pour exporter les formes en G-code
-        self.export_button = QPushButton("Export G-code")
+        self.export_button = QPushButton("Export drawing")
         self.export_button.clicked.connect(self.export_gcode)
         self.export_button.setFixedSize(150, 40)
         button_layout.addWidget(self.export_button)
@@ -121,36 +141,48 @@ class Window(QMainWindow):
         main_layout.addWidget(self.analyze_button, 0, 1, 1, 1, Qt.AlignmentFlag.AlignHCenter)
         self.analyze_button.hide()
 
-
-        
-
+        #Bouton pour choisir dans la banque d'image
         self.image_selector = QComboBox()
-        #self.image_selector.addItems(["Select an image", "Shrek", "Heart", "Nemo", "Canadiens", "Capybara", "Poulpe"])
+        self.image_selector.setFixedSize(200, 50)
         self.image_selector.addItem("Select an image")
-        self.image_selector.addItem(QIcon("C:/S4-Projet/Poulpus_Davinkus/UI/Images/shrek"), "Shrek")
-        self.image_selector.addItem(QIcon("C:/S4-Projet/Poulpus_Davinkus/UI/heart"), "Heart")
-        self.image_selector.addItem(QIcon("C:/S4-Projet/Poulpus_Davinkus/UI/nemo"), "Nemo")
-        self.image_selector.addItem(QIcon("C:/S4-Projet/Poulpus_Davinkus/UI/canadiens_logo"), "Canadiens")
-        self.image_selector.addItem(QIcon("C:/S4-Projet/Poulpus_Davinkus/UI/capybara"), "Capybara")
-        self.image_selector.addItem(QIcon("C:/S4-Projet/Poulpus_Davinkus/UI/Poulpus_Davinkus"), "Poulpe")
+        self.image_selector.addItem(QIcon(self.image_paths.get("Shrek")), "Shrek")
+        self.image_selector.addItem(QIcon(self.image_paths.get("Heart")), "Heart")
+        self.image_selector.addItem(QIcon(self.image_paths.get("Nemo")), "Nemo")
+        self.image_selector.addItem(QIcon(self.image_paths.get("Canadiens")), "Canadiens")
+        self.image_selector.addItem(QIcon(self.image_paths.get("Capybara")), "Capybara")
+        self.image_selector.addItem(QIcon(self.image_paths.get("Poulpe")), "Poulpe")
         main_layout.addWidget(self.image_selector, 0, 0, 1, 1, Qt.AlignmentFlag.AlignHCenter)
         self.image_selector.hide()
-        self.image_selector.currentTextChanged.connect(self.text_change)
+        self.image_selector.currentTextChanged.connect(self.image_change)
         self.uploader = Uploader(self.left_label)
+
+        #Boutons pour choisir un dessin de la banque
+        self.drawing_selector = QComboBox()
+        self.drawing_selector.setFixedSize(200, 50)
+        self.drawing_selector.addItems(["Select a drawing","Foret", "Chat", "Voiture"])
+        main_layout.addWidget(self.drawing_selector, 0, 3, 1, 1, Qt.AlignmentFlag.AlignHCenter)
+        self.drawing_selector.currentTextChanged.connect(self.drawing_change)
 
         self.pen = QPen(QColor("black"))
         self.pen.setWidth(6)
 
-    def text_change(self, s):
+    #Fonction pour afficher l'image sélectionné dans la banque
+    def image_change(self, s):
         self.image_path = self.image_paths.get(s)
         if self.image_path:
             self.uploader.upload_image(self.image_path)
 
+    def drawing_change(self, s):
+        self.drawing_path = self.drawing_paths.get(s)
+        if self.drawing_path:
+            self.load_drawing()
+
+    #Lance l'analyse d'image sur l'image présente sur la toile de gauche
     def test_analyze(self):
         output_path = os.path.abspath("C:/S4-Projet/Poulpus_Davinkus/UI/output.png")
         output_path2 = os.path.abspath("C:/S4-Projet/Poulpus_Davinkus/UI/outputgcode.txt")
         
-        # Get the pixmap from the uploader
+        # Accède à la pixmap de uploader
         pixmap = self.uploader.get_pixmap()
         if pixmap is None:
             print("Error: No image uploaded.")
@@ -161,17 +193,53 @@ class Window(QMainWindow):
         cv_img.draw_circles(output_path, (400, 600), "white")
         cv_img.convert_gcode(output_path2, (216, 279), (400, 600))
         
-        # Assign pixmap and process the image
-        # self.manip_image.pixmap = pixmap
-        # self.manip_image.load_image()
-        # self.manip_image.analyze_image()
-        # self.manip_image.draw_circles(output_path, (400, 600), "white")
-        # self.manip_image.convert_gcode(output_path2, (216, 279), (400, 600))
-        
         print("Analysis completed, outputs saved.")
 
+    # def save_drawing(self):
+    #     import os
+
+    def save_drawing(self):
+        if not self.shapes:
+            print("No shapes to save.")
+            return
+        
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save Drawing", "", "Text Files (*.txt)")
+        
+        if not file_path:
+            print("Save canceled.")
+            return
+
+        with open(file_path, "w") as f:
+            for shape, position, color in self.shapes:
+                x = position.x()
+                y = position.y()
+                #color_str = color.name()  
+                f.write(f"SHAPE {shape} X{x} Y{y} COLOR {color}\n")
+
+        print(f"Drawing saved to '{file_path}'")
+
+    #Charge un dessin préalablement enregistré
+    def load_drawing(self):
+        if not self.drawing_path or not os.path.exists(self.drawing_path):
+            print("Invalid drawing path")
+            return
+
+        self.shapes.clear()
+        
+        with open(self.drawing_path, "r") as f:
+            lines = f.readlines()
+            for line in lines:
+                match = re.search(r'SHAPE (\w+) X(-?\d+) Y(-?\d+) COLOR (#\w+)', line)
+                if match:
+                    shape, x, y, color = match.groups()
+                    position = QPoint(int(x), int(y))
+                    qcolor = QColor(color) 
+                    self.shapes.append((shape, position, qcolor))
+
+        self.redraw_canvas()
 
 
+    #Création de l'arrière plan de type "Océan"
     def set_ocean_gradient_background(self):
         gradient = QLinearGradient(0, 0, 0, self.height())
         gradient.setColorAt(0, QColor(0, 105, 148))
@@ -180,15 +248,15 @@ class Window(QMainWindow):
         palette = self.palette()
         palette.setBrush(QPalette.ColorRole.Window, QBrush(gradient))
         self.setPalette(palette)
-
+    
+    #Fonction pour ajouter les bulles dans l'arrière plan
     def paintEvent(self, event):
-
         super().paintEvent(event)
         painter = QPainter(self)
         self.draw_bubbles(painter)
 
+    #Création des bulles pour l'arrière plan
     def draw_bubbles(self, painter):
-
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(QColor(173, 216, 230, 150)))  # Bleu pale pour faire comme transparent
 
@@ -198,44 +266,49 @@ class Window(QMainWindow):
             y = random.randint(0, self.height())
             painter.drawEllipse(x, y, diameter, diameter)
 
+    #Fonction pour que la fenêtre reste stable quand elle est ajustée en plein écran
     def resizeEvent(self, event):
         self.set_ocean_gradient_background()
         super().resizeEvent(event)
 
+    #Changement de mise en plan lors du changement de mode
     def change_mode(self):
         self.clear_canvas()
         if self.current_mode == "Drawing":
             self.current_mode = "Image"
             self.side_buttons_container.setVisible(False)
             self.color_picker.color_container.setVisible(False)
-            #self.uploader.setVisible(True)
             self.undo_button.setVisible(False)
             self.export_button.setVisible(False)
             self.image_selector.setVisible(True)
             self.analyze_button.setVisible(True)
             self.image_path = None
             self.image_selector.setCurrentIndex(0)
+            self.drawing_selector.setVisible(False)
+            self.drawing_selector.setCurrentIndex(0)
             
         else:
             self.current_mode = "Drawing"
             self.side_buttons_container.setVisible(True)
             self.color_picker.color_container.setVisible(True)
-            #self.uploader.setVisible(False)
             self.undo_button.setVisible(True)
             self.export_button.setVisible(True)
             self.image_selector.setVisible(False)
             self.analyze_button.setVisible(False)
             self.image_path = None
+            self.drawing_selector.setVisible(True)
             
-
+    #Ajuste la bonne forme à utiliser en fonction du choix de l'utilisateur
     def set_shape(self, shape):
         self.current_shape = shape
 
+    #Efface l'entierté des formes/images sur la toile de gauche
     def clear_canvas(self):
         self.left_canvas.fill_canvas()
         self.shapes.clear()
         self.history.clear()
 
+    #Envoie les coordonnée et les informations des formes sur un dessin
     def export_gcode(self):
         gcode_commands = []
         for shape, position, color in self.shapes:
@@ -247,11 +320,13 @@ class Window(QMainWindow):
             f.write("\n".join(gcode_commands))
         print("G-code exported to output.gcode")
 
+    #Efface la dernière forme placé par l'utilisateur
     def undo(self):
         if self.shapes:  
             self.shapes.pop()  
             self.redraw_canvas()
 
+    #Redessine la toile de gauche après une modification
     def redraw_canvas(self):
         self.left_canvas.fill_canvas() 
         painter = QPainter(self.left_canvas.canvas)
@@ -263,6 +338,7 @@ class Window(QMainWindow):
         painter.end()
         self.left_label.setPixmap(self.left_canvas.canvas)
 
+    #Ajoute une forme lorsque l'utilisateur appuis dans une zone de la toile de gauche uniquement
     def mousePressEvent(self, event):
         if self.current_mode == "Drawing":
             position = self.left_label.mapFrom(self, event.pos())

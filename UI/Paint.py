@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout, QComboBox
-from PyQt6.QtGui import QPixmap, QPainter, QPen, QColor, QBrush, QPalette, QLinearGradient
+from PyQt6.QtGui import QPixmap, QPainter, QPen, QColor, QBrush, QPalette, QLinearGradient, QIcon
 from PyQt6.QtCore import Qt, QPoint
 from functools import partial
 import sys
@@ -125,7 +125,14 @@ class Window(QMainWindow):
         
 
         self.image_selector = QComboBox()
-        self.image_selector.addItems(["Select an image", "Shrek", "Heart", "Nemo", "Canadiens", "Capybara", "Poulpe"])
+        #self.image_selector.addItems(["Select an image", "Shrek", "Heart", "Nemo", "Canadiens", "Capybara", "Poulpe"])
+        self.image_selector.addItem("Select an image")
+        self.image_selector.addItem(QIcon("C:/S4-Projet/Poulpus_Davinkus/UI/Images/shrek"), "Shrek")
+        self.image_selector.addItem(QIcon("C:/S4-Projet/Poulpus_Davinkus/UI/heart"), "Heart")
+        self.image_selector.addItem(QIcon("C:/S4-Projet/Poulpus_Davinkus/UI/nemo"), "Nemo")
+        self.image_selector.addItem(QIcon("C:/S4-Projet/Poulpus_Davinkus/UI/canadiens_logo"), "Canadiens")
+        self.image_selector.addItem(QIcon("C:/S4-Projet/Poulpus_Davinkus/UI/capybara"), "Capybara")
+        self.image_selector.addItem(QIcon("C:/S4-Projet/Poulpus_Davinkus/UI/Poulpus_Davinkus"), "Poulpe")
         main_layout.addWidget(self.image_selector, 0, 0, 1, 1, Qt.AlignmentFlag.AlignHCenter)
         self.image_selector.hide()
         self.image_selector.currentTextChanged.connect(self.text_change)

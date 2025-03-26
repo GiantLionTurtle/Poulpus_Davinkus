@@ -155,7 +155,7 @@ class Window(QMainWindow):
         if pixmap is None:
             print("Error: No image uploaded.")
             return
-        cv_img = ManipImage(pixmap=pixmap)
+        cv_img = ManipImage(pixmap=pixmap, file_path=self.image_path)
         cv_img.load_image()
         cv_img.analyze_image()
         cv_img.draw_circles(output_path, (400, 600), "white")

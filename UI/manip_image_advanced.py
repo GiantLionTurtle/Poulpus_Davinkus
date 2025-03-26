@@ -8,10 +8,11 @@ from dataclasses import dataclass
 from matplotlib import pyplot as plt
 
 class ManipImageAdvanced:
-    def __init__(self, pixmap=None):
+    def __init__(self, pixmap=None, file_path=None):
         self.image = None
         #Obtained as argument when instancing the class
         self.pixmap = pixmap
+        self.file_path = None
 
     def _convertPixmapToCvImage(self, pixmap:QPixmap) -> np.ndarray:
         try:

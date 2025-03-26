@@ -34,7 +34,7 @@ class Window(QMainWindow):
             "Shrek": os.getcwd() + "/Images/shrek.png",
             "Heart": os.getcwd() + "/Images/heart.png",
             "Nemo": os.getcwd() + "/Images/nemo.png",
-            "Canadiens": os.getcwd() + "/Images/canadiens_logo.png",
+            "Canadiens": os.getcwd() + "/Images/canadien_logo.png",
             "Capybara": os.getcwd() + "/Images/capybara.png",
             "Poulpe": os.getcwd() + "/Images/Poulpus_Davinkus.jpg",
             "Pikachu": os.getcwd() + "/Images/fat_pikachu.png",
@@ -128,11 +128,8 @@ class Window(QMainWindow):
         main_layout.addWidget(self.analyze_button, 0, 1, 1, 1, Qt.AlignmentFlag.AlignHCenter)
         self.analyze_button.hide()
 
-
-        
-
         self.image_selector = QComboBox()
-        self.image_selector.addItems(["Select an image", "Shrek", "Heart", "Nemo", "Canadiens", "Capybara", "Poulpe"])
+        self.image_selector.addItems(["Select an image", "Shrek", "Heart", "Nemo", "Canadiens", "Capybara", "Poulpe", "Pikachu"])
         main_layout.addWidget(self.image_selector, 0, 0, 1, 1, Qt.AlignmentFlag.AlignHCenter)
         self.image_selector.hide()
         self.image_selector.currentTextChanged.connect(self.text_change)

@@ -46,6 +46,7 @@ class ManipImageAdvanced:
         except Exception as e:
             print(f"Error occured as:{e}")
 
+    #Might not be useful afterall
     def transparentBackground(self):
         if self.image is None:
             raise ValueError("Must run intializeImageFromPixmap first")
@@ -54,10 +55,6 @@ class ManipImageAdvanced:
             return 1
         else:
             return 0
-        #To implement later if pixmap allows for 4 channels
-        # if self.transparentBackground():
-        #     #Obtain the alpha channel to use for masks
-        #     alpha = self.image[:,:,3]
 
     def applyMaskOnImage(self):
         if self.image is None:
@@ -72,25 +69,39 @@ class ManipImageAdvanced:
             mask_white = cv.inRange(image_hsv, lower_bound2, upper_bound2)
             masked_image = cv.subtract(mask_red, mask_white)
         elif(self.getImageName() == "shrek.png"):
-            lower_bound = np.array([0, 0, 50])
-            upper_bound = np.array([10, 255, 255])
-            mask_green = cv.inRange(image_hsv, lower_bound, upper_bound)
-            masked_image = cv.bitwise_and(image_hsv, image_hsv, mask=mask_green)
+            lower_bound = np.array([0, 0, 0])
+            upper_bound = np.array([180, 0, 255])
+            mask_black = cv.inRange(image_hsv, lower_bound, upper_bound)
+            masked_image = cv.bitwise_not(mask_black)
         elif(self.getImageName() == "nemo.png"):
-            lower_bound = np.array([0, 0, 50])
-            upper_bound = np.array([10, 255, 255])
-        elif(self.getImageName() == "canadiens_logo.png"):
-            lower_bound = np.array([0, 0, 50])
-            upper_bound = np.array([10, 255, 255])
+            lower_bound = np.array([0, 0, 0])
+            upper_bound = np.array([180, 0, 255])
+            mask_white = cv.inRange(image_hsv, lower_bound, upper_bound)
+            masked_image = cv.bitwise_not(mask_white)
+        elif(self.getImageName() == "canadien_logo.png"):
+            #Make sure when we apply the stamps we dont put a stamp for the little circle
+            lower_bound = np.array([0, 0, 0])
+            upper_bound = np.array([180, 0, 255])
+            mask_white = cv.inRange(image_hsv, lower_bound, upper_bound)
+            masked_image = cv.bitwise_not(mask_white)
         elif(self.getImageName() == "capybara.png"):
-            lower_bound = np.array([0, 0, 50])
-            upper_bound = np.array([10, 255, 255])
+            lower_bound = np.array([0, 0, 0])
+            upper_bound = np.array([180, 0, 255])
+            mask_white = cv.inRange(image_hsv, lower_bound, upper_bound)
+            masked_image = cv.bitwise_not(mask_white)
         elif(self.getImageName() == "Poulpus_Davinkus.jpg"):
-            lower_bound = np.array([0, 0, 50])
-            upper_bound = np.array([10, 255, 255])
+            lower_bound = np.array([160, 50, 50])
+            upper_bound = np.array([180, 255, 255])
+            mask_pink = cv.inRange(image_hsv, lower_bound, upper_bound)
+            lower_bound2 = np.array([109, 73, 225])
+            upper_bound2 = np.array([180, 255, 255])
+            mask_pink_light = cv.inRange(image_hsv, lower_bound2, upper_bound2)
+            masked_image = cv.subtract(mask_pink, mask_pink_light)
         elif(self.getImageName() == "fat_pikachu.png"):
-            lower_bound = np.array([0, 0, 50])
-            upper_bound = np.array([10, 255, 255])
+            lower_bound = np.array([0, 0, 0])
+            upper_bound = np.array([180, 0, 255])
+            mask_white = cv.inRange(image_hsv, lower_bound, upper_bound)
+            masked_image = cv.bitwise_not(mask_white)
 
         plt.figure()
         plt.imshow(masked_image)

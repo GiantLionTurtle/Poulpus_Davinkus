@@ -103,31 +103,46 @@ class ManipImageAdvanced:
             mask_white = cv.inRange(image_hsv, lower_bound, upper_bound)
             masked_image = cv.bitwise_not(mask_white)
 
-        plt.figure()
-        plt.imshow(masked_image)
-        plt.show()
+        # plt.figure()
+        # plt.imshow(masked_image)
+        # plt.show()
 
         self.image = masked_image
+
+    def findContours(self):
+        if self.image is None:
+            raise ValueError("Must run intializeImageFromPixmap first")
+        img = self.image
+        edges = cv.Canny(img, 100, 200)
+        contours, _ = cv.findContours(edges, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
+        print(f"Number of contours: {len(contours)}")
+        #Let us see the contours, masked image has shape == 2 just as grayscale
+        img_bgr = cv.cvtColor(img, cv.COLOR_GRAY2RGB)
+        # cv.drawContours(img_bgr, contours, -1, (0, 0, 255), 2)
+
+        # plt.figure()
+        # plt.imshow(img_bgr)
+        # plt.show()
+
+        return contours
+
+    def contourFiltering(self,contours):
+        if self.image is None:
+            raise ValueError("Must run intializeImageFromPixmap first")
+        contours_list = [contour for contour in contours if (cv.contourArea(contour) >= 50)]
+        #print(contours_list)
+        print(f"Number of contours after filtering: {len(contours_list)}")
+        #Test if the filtering is correct
+        img = self.image
+        img_bgr = cv.cvtColor(img, cv.COLOR_GRAY2RGB)
+        cv.drawContours(img_bgr, contours_list, -1, (0, 0, 255), 2)
+        plt.figure()
+        plt.imshow(img_bgr)
+        plt.show()
+        return contours_list
     
-    
-    def convertGcode(self, output_path, paper_size, image_size):
-    
-        gcode = []
-
-        max_x, max_y = image_size
-        paper_width, paper_height = paper_size
-
-        for x, y in self.circles:
-            x_mm = (x / max_x) * paper_width
-            y_mm = paper_height - (y / max_y) * paper_height
-
-            gcode.append(f"G1 Z{-10}")
-            gcode.append(f"G1 X{x_mm:.2f} Y{y_mm:.2f}")
-            gcode.append(f"G1 Z{10}")
-
-        with open(output_path, "w") as txt_file:
-            for line in gcode:
-                txt_file.write("".join(line) + "\n")
+    def fillContours(self, contours):
+        pass
 
         #Hough Transform
         # lines = cv.HoughLinesP(edges, 1, np.pi/180, 68, minLineLength=1, maxLineGap=250)

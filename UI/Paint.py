@@ -157,7 +157,8 @@ class Window(QMainWindow):
         cv_img.applyMaskOnImage()
         contours = cv_img.findContours()
         new_contours = cv_img.contourFiltering(contours)
-        cv_img.fillContours(new_contours)
+        final_contours = cv_img.reassembleContours(new_contours)
+        coordinates = cv_img.fillContours(final_contours)
         #cv_img.draw_circles(output_path, (400, 600), "white")
         #cv_img.convert_gcode(output_path2, (216, 279), (400, 600))
         

@@ -76,8 +76,11 @@ class ManipImageAdvanced:
         elif(self.getImageName() == "nemo.png"):
             lower_bound = np.array([0, 0, 0])
             upper_bound = np.array([180, 0, 255])
+            lower_bound2 = np.array([0, 0, 0])
+            upper_bound2 = np.array([180, 0, 55])
             mask_white = cv.inRange(image_hsv, lower_bound, upper_bound)
-            masked_image = cv.bitwise_not(mask_white)
+            mask_white2 = cv.inRange(image_hsv, lower_bound2, upper_bound2)
+            masked_image = cv.bitwise_not(mask_white2)
         elif(self.getImageName() == "canadien_logo.png"):
             #Make sure when we apply the stamps we dont put a stamp for the little circle
             lower_bound = np.array([0, 0, 0])
@@ -129,20 +132,77 @@ class ManipImageAdvanced:
     def contourFiltering(self,contours):
         if self.image is None:
             raise ValueError("Must run intializeImageFromPixmap first")
-        contours_list = [contour for contour in contours if (cv.contourArea(contour) >= 50)]
-        #print(contours_list)
-        print(f"Number of contours after filtering: {len(contours_list)}")
+        if(self.getImageName() == "heart.png"):
+            pass
+        elif(self.getImageName() == "shrek.png"):
+            for contour in contours:
+                print(f"Contour area: {cv.contourArea(contour)}")
+                print(f"Contour length: {len(contour)}")
+            #Checker plus tard pour la condition de l'aire
+            contours_list = [contour for contour in contours if (len(contour) > 8 and cv.contourArea(contour) > 6)]
+            #print(contours_list)
+            print(f"Number of contours after filtering: {len(contours_list)}")
+            for contour in contours_list:
+                print(f"Contour area: {cv.contourArea(contour)}")
+                print(f"Contour length: {len(contour)}")
+        #Skipped pour l'instant
+        elif(self.getImageName() == "nemo.png"):
+            for contour in contours:
+                print(f"Contour area: {cv.contourArea(contour)}")
+                print(f"Contour length: {len(contour)}")
+            contours_list = [contour for contour in contours if (len(contour) >= 8)]
+            #print(contours_list)
+            print(f"Number of contours after filtering: {len(contours_list)}")
+        elif(self.getImageName() == "canadien_logo.png"):
+            #Make sure when we apply the stamps we dont put a stamp for the little circle
+            for contour in contours:
+                print(f"Contour area: {cv.contourArea(contour)}")
+                print(f"Contour length: {len(contour)}")
+            contours_list = [contour for contour in contours if (cv.contourArea(contour) > 140)]
+            print(f"Number of contours after filtering: {len(contours_list)}")
+            for contour in contours_list:
+                print(f"Contour area: {cv.contourArea(contour)}")
+                print(f"Contour length: {len(contour)}")
+        elif(self.getImageName() == "capybara.png"):
+            for contour in contours:
+                print(f"Contour area: {cv.contourArea(contour)}")
+                print(f"Contour length: {len(contour)}")
+            #Checker plus tard pour la condition de l'aire
+            contours_list = [contour for contour in contours if (len(contour) >= 8)]
+            #print(contours_list)
+            print(f"Number of contours after filtering: {len(contours_list)}")
+        elif(self.getImageName() == "Poulpus_Davinkus.jpg"):
+            for contour in contours:
+                print(f"Contour area: {cv.contourArea(contour)}")
+                print(f"Contour length: {len(contour)}")
+            #Checker plus tard pour la condition de l'aire
+            contours_list = [contour for contour in contours if (len(contour) >= 8)]
+            #print(contours_list)
+            print(f"Number of contours after filtering: {len(contours_list)}")
+        elif(self.getImageName() == "fat_pikachu.png"):
+            for contour in contours:
+                print(f"Contour area: {cv.contourArea(contour)}")
+                print(f"Contour length: {len(contour)}")
+            #Checker plus tard pour la condition de l'aire
+            contours_list = [contour for contour in contours if (len(contour) >= 8)]
+            #print(contours_list)
+            print(f"Number of contours after filtering: {len(contours_list)}")
+
+        
         #Test if the filtering is correct
         img = self.image
         img_bgr = cv.cvtColor(img, cv.COLOR_GRAY2RGB)
-        cv.drawContours(img_bgr, contours_list, -1, (0, 0, 255), 2)
+        cv.drawContours(img_bgr, contours_list, -1, (0, 0, 255), 3)
         plt.figure()
         plt.imshow(img_bgr)
         plt.show()
         return contours_list
     
+    def reassembleContours(self, contours):
+        return None
+    
     def fillContours(self, contours):
-        pass
+        return None
 
         #Hough Transform
         # lines = cv.HoughLinesP(edges, 1, np.pi/180, 68, minLineLength=1, maxLineGap=250)

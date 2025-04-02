@@ -1,48 +1,66 @@
 import numpy as np
 import cv2 as cv
-from PIL import Image, ImageDraw
-from manip_image_simple import ManipImage
-from dataclasses import dataclass
+import paramiko
 
 class Communication:
 
-    def __init__(self,output_path, text_file):
-        self.hop = 0.03 #hop height constant in meter
+    def __init__(self):
+        self.hop = 30
+        self.flowRate = 5000 #hop height constant in meter
+        self.pageSizeMm = [210, 297]
+        self.pageSizePix = [2000, 3000] # NEEDS TO BE CHANGED
         self.pageHeight = 0  #height in the Z axis to stamp
         self.gcode = []
         self.currentColor = None
         self.currentShape = None
-        self.output_path = output_path
-        self.text_file = text_file
         self.roundStampPosition  = [15,20,60]  #Arbitrary position (needs to be tested)
         self.squareStampPosition = [15,25,60]  #Arbitrary position (needs to be tested)
         self.inkPoolPosition = [30,45,10] #Arbitrary position (needs to be tested)
-        self.refillValue = 50
+        self.refillValue = 25
+        self.host = "poulpus.local"
+        self.username = "poulpus"
+        self.password = "davinkus"
+
+        self.client = paramiko.client.SSHClient()
+        self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+        self.openSSH()
 
         self.go_home()
 
 
-        return
+    
+    def __del__(self):
+        self.closeSSH()
+
+    def openSSH(self):
+
+        self.client.connect(self.host, username=self.username, password=self.password)
+
+    def closeSSH(self):
+        
+        self.client.close()
+
 
     def pixel_to_mm(positionPixel, refPixels, refMm):
 
         PositionMeters = (positionPixel/refPixels) * refMm
         return PositionMeters
+    
 
+    def position_to_gcode(self,X,Y, Z):  #Positions en pixels sauf Z, le changement d'unites ce fera ici
 
-    def position_to_gcode(self,X,Y, Z):  #Positions en millimetres, color et shape sont des int
-
-        self.gcode.append(f"G1 X{X:.2f} Y{Y:.2f} Z{Z:.2f}")
+        self.gcode.append(f"G1 X{x:.2f} Y{y:.2f} Z{Z:.2f} F{self.flowRate}\n")
 
     def go_home(self):
 
-        self.gcode.append(f"G28")
+        self.gcode.append(f"G28\n")
     
     def stamp_path(self, x, y):
 
-        self.position_to_gcode(x, y, self.pageHeight +50)
+        self.position_to_gcode(x, y, self.pageHeight +self.hop)
         self.position_to_gcode(x, y, self.pageHeight)
-        self.position_to_gcode(x, y, self.pageHeight +50)
+        self.position_to_gcode(x, y, self.pageHeight +self.hop)
     
     
     def change_stamp(self, color, shape):
@@ -78,14 +96,14 @@ class Communication:
         return
     def ink_stamp(self,color):
         
-        return
-    def write_gcode(self, txt_file, output_path):
-
-        with open(output_path, "w") as txt_file:
-            for line in self.gcode:
-                txt_file.write("".join(line) + "\n")
-
-        return
+        return 
+    
+    def send_Gcode(self):
+        msg = ""
+        for i in self.gcode:
+            msg = msg + self.gcode[i]
+        
+        stdin, stdout, stderr = self.client.exec_command("echo '{}' >> /tmp/printer".format(msg))
         
 
 
@@ -96,7 +114,9 @@ class Communication:
         stamp_counter = 0
 
         for x,y,shape,color  in positions:
-
+        
+            X = self.pixel_to_mm(x, self.pageSizePix(1), self.pageSizeMm(1))
+            Y = self.pixel_to_mm(y, self.pageSizePix(2), self.pageSizeMm(2))
             #Checks is Stamp needs to be changed
             if shape != self.currentShape or color != self.currentColor:
                 self.change_stamp(color, shape)
@@ -108,7 +128,7 @@ class Communication:
                 self.ink_stamp(color)
                 stamp_counter = 0
                 
-            self.stamp_path(x, y)
+            self.stamp_path(X, Y)
             stamp_counter += 1
 
         self.go_home()

@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout, QComboBox, QToolBar, QFileDialog
 from PyQt6.QtGui import QPixmap, QPainter, QPen, QColor, QBrush, QPalette, QLinearGradient, QIcon, QAction
-from PyQt6.QtCore import Qt, QPoint
+from PyQt6.QtCore import Qt, QPoint, QSize
 from functools import partial
 import sys
 import os
@@ -32,15 +32,16 @@ class Window(QMainWindow):
         self.image_path = None
         self.drwing_path = None
         
-        #Paths des différentes imagesdispo dans la banque
+        #Paths des différentes images disponibles dans la banque
         self.image_paths = {
     "Shrek": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/shrek",
-    "Heart": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/heart",
+    "Coeur": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/heart",
     "Nemo": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/nemo",
     "Canadiens": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/canadien_logo",
     "Capybara": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/capybara",
     "Poulpe": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/Poulpus_Davinkus",
 }
+        #path des différents dessins disponibles dans la banque
         self.drawing_paths = {
     "Foret": "C:/S4-Projet/Poulpus_Davinkus/drawings/foret.txt",
     "Chat": "C:/S4-Projet/Poulpus_Davinkus/drawings/chat.txt",
@@ -82,7 +83,7 @@ class Window(QMainWindow):
         # Boutons des différentes formes
         self.side_buttons_container = QWidget()
         side_buttons_layout = QVBoxLayout()
-        shapes = ["Square", "Triangle", "Circle", "Ink", "Star"]
+        shapes = ["Carré", "Triangle", "Cercle", "Fleur", "Étoile"]
         for shape in shapes:
             btn = QPushButton(shape)
             btn.setFixedSize(80, 30)
@@ -108,19 +109,19 @@ class Window(QMainWindow):
         button_layout = QHBoxLayout()
 
         # Bouton pour effacer l'entiereté de la toile 
-        self.clear_button = QPushButton("Clear Canvas")
+        self.clear_button = QPushButton("Nettoyer la toile")
         self.clear_button.clicked.connect(self.clear_canvas)
         self.clear_button.setFixedSize(150, 40)
         button_layout.addWidget(self.clear_button)
 
         # Bouton pour annuler la dernière action
-        self.undo_button = QPushButton("Undo")
+        self.undo_button = QPushButton("Retour vers l'arrière")
         self.undo_button.clicked.connect(self.undo)
         self.undo_button.setFixedSize(150, 40)
         button_layout.addWidget(self.undo_button)
 
         # Bouton pour exporter les formes en G-code
-        self.export_button = QPushButton("Export drawing")
+        self.export_button = QPushButton("Envoyer le dessin au robot")
         self.export_button.clicked.connect(self.export_gcode)
         self.export_button.setFixedSize(150, 40)
         button_layout.addWidget(self.export_button)
@@ -129,13 +130,16 @@ class Window(QMainWindow):
         main_layout.addWidget(button_container, 2, 1, 1, 2, Qt.AlignmentFlag.AlignCenter)
 
         # Bouton qui permet de changer le mode d'utilisation de l'intertface
-        mode_button = QPushButton("Change mode")
+        mode_button = QPushButton("Changer de mode")
         mode_button.clicked.connect(self.change_mode)
         mode_button.setFixedSize(150, 40)
         main_layout.addWidget(mode_button, 0, 5, 1, 1)
 
         #self.manip_image = ManipImage()
-        self.analyze_button = QPushButton("Go")
+        #self.analyze_button = QPushButton("Appuie pour 5 big BOOMS")
+        self.analyze_button = QPushButton()
+        self.analyze_button.setIcon(QIcon("C:/S4-Projet/Poulpus_Davinkus/UI/Bouton.png"))
+        self.analyze_button.setIconSize(QSize(150, 40))
         self.analyze_button.clicked.connect(self.test_analyze)
         self.analyze_button.setFixedSize(150, 40)
         main_layout.addWidget(self.analyze_button, 0, 1, 1, 1, Qt.AlignmentFlag.AlignHCenter)
@@ -144,9 +148,9 @@ class Window(QMainWindow):
         #Bouton pour choisir dans la banque d'image
         self.image_selector = QComboBox()
         self.image_selector.setFixedSize(200, 50)
-        self.image_selector.addItem("Select an image")
+        self.image_selector.addItem("Choisir une image")
         self.image_selector.addItem(QIcon(self.image_paths.get("Shrek")), "Shrek")
-        self.image_selector.addItem(QIcon(self.image_paths.get("Heart")), "Heart")
+        self.image_selector.addItem(QIcon(self.image_paths.get("Heart")), "Coeur")
         self.image_selector.addItem(QIcon(self.image_paths.get("Nemo")), "Nemo")
         self.image_selector.addItem(QIcon(self.image_paths.get("Canadiens")), "Canadiens")
         self.image_selector.addItem(QIcon(self.image_paths.get("Capybara")), "Capybara")
@@ -159,7 +163,7 @@ class Window(QMainWindow):
         #Boutons pour choisir un dessin de la banque
         self.drawing_selector = QComboBox()
         self.drawing_selector.setFixedSize(200, 50)
-        self.drawing_selector.addItems(["Select a drawing","Foret", "Chat", "Voiture"])
+        self.drawing_selector.addItems(["Choisissez un dessin","Foret", "Chat", "Voiture"])
         main_layout.addWidget(self.drawing_selector, 0, 3, 1, 1, Qt.AlignmentFlag.AlignHCenter)
         self.drawing_selector.currentTextChanged.connect(self.drawing_change)
 
@@ -194,9 +198,6 @@ class Window(QMainWindow):
         cv_img.convert_gcode(output_path2, (216, 279), (400, 600))
         
         print("Analysis completed, outputs saved.")
-
-    # def save_drawing(self):
-    #     import os
 
     def save_drawing(self):
         if not self.shapes:
@@ -347,7 +348,7 @@ class Window(QMainWindow):
             painter.setPen(self.pen)
             painter.setBrush(QBrush(self.current_color, Qt.BrushStyle.SolidPattern))
 
-            if self.current_shape in ["Circle", "Square", "Triangle", "Star", "Ink"]:
+            if self.current_shape in ["Cercle", "Carré", "Triangle", "Étoile", "Fleur"]:
                 self.shapes.append((self.current_shape, position, self.current_color.name()))
                 self.draw_shape(self.current_shape, position, painter)
 
@@ -355,15 +356,15 @@ class Window(QMainWindow):
             self.left_label.setPixmap(self.left_canvas.canvas)
 
     def draw_shape(self, shape, position, painter):
-        if shape == "Circle":
+        if shape == "Cercle":
             draw_circle(position, painter, 50)
-        elif shape == "Square":
+        elif shape == "Carré":
             draw_square(position, painter, 50)
         elif shape == "Triangle":
             draw_triangle(position, painter, 50)
-        elif shape == "Star":
+        elif shape == "Étoile":
             draw_star(position, painter, 50)
-        elif shape == "Ink":
+        elif shape == "Fleur":
             draw_splatter(position, painter)
 
 

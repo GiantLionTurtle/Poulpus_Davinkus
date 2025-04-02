@@ -5,10 +5,10 @@ import paramiko
 class Communication:
 
     def __init__(self):
-        self.hop = 30
-        self.flowRate = 5000 #hop height constant in meter
+        self.hop = 30 #hop height constant in millimeter
+        self.flowRate = 5000 
         self.pageSizeMm = [210, 297]
-        self.pageSizePix = [2000, 3000] # NEEDS TO BE CHANGED
+        self.pageSizePix = [400, 600] # NEEDS TO BE CHANGED
         self.pageHeight = 0  #height in the Z axis to stamp
         self.gcode = []
         self.currentColor = None
@@ -26,7 +26,7 @@ class Communication:
 
         #self.openSSH()
 
-        self.go_home()
+        
 
 
     
@@ -42,16 +42,17 @@ class Communication:
         
         self.client.close()
 
-
-    def pixel_to_mm(positionPixel, refPixels, refMm):
+    
+    def pixel_to_mm(self,positionPixel, refPixels, refMm):
 
         PositionMeters = (positionPixel/refPixels) * refMm
         return PositionMeters
     
     def rotate_matrix(self,x,y):
-        
-        X = -np.cos(np.pi/3)*x + np.sin(np.pi/3)*x - (self.pageSizeMm[1])/2
-        Y = np.sin(np.pi/3)*y + np.cos(np.pi/3)*y - (self.pageSizeMm[2])/2
+        x = x- (self.pageSizeMm[0])/2
+        y = y - (self.pageSizeMm[1])/2
+        X = -np.cos(np.pi/3)*x + np.sin(np.pi/3)*x 
+        Y = np.sin(np.pi/3)*y + np.cos(np.pi/3)*y 
 
         return [X,Y]
         
@@ -78,26 +79,26 @@ class Communication:
 
         #Sequences needs to be tested to find out the correct offsets and the correct Stamp positions
         #Put the stamp in the rack
-        if self.currentShape == "round":
-            self.position_to_gcode(self.roundStampPosition[1] -50, self.roundStampPosition[2], self.roundStampPosition[3] )
-            self.position_to_gcode(self.roundStampPosition[1] ,self.roundStampPosition[2], self.roundStampPosition[3] )
-            self.position_to_gcode(self.roundStampPosition[1],self.roundStampPosition[2], self.roundStampPosition[3] + 50)
+        if self.currentShape == "Cercle":
+            self.position_to_gcode(self.roundStampPosition[0] -50, self.roundStampPosition[1], self.roundStampPosition[2] )
+            self.position_to_gcode(self.roundStampPosition[0] ,self.roundStampPosition[1], self.roundStampPosition[2] )
+            self.position_to_gcode(self.roundStampPosition[0],self.roundStampPosition[1], self.roundStampPosition[2] + 50)
 
-        if self.currentShape == "square":
-            self.position_to_gcode(self.squareStampPosition[1] -50 , self.squareStampPosition[2] , self.squareStampPosition[3])
-            self.position_to_gcode(self.squareStampPosition[1] ,self.squareStampPosition[2], self.squareStampPosition[3])
-            self.position_to_gcode(self.squareStampPosition[1] ,self.squareStampPosition[2],self.squareStampPosition[3]+ 50)
+        if self.currentShape == "Carré":
+            self.position_to_gcode(self.squareStampPosition[0] -50 , self.squareStampPosition[1] , self.squareStampPosition[2])
+            self.position_to_gcode(self.squareStampPosition[0] ,self.squareStampPosition[1], self.squareStampPosition[2])
+            self.position_to_gcode(self.squareStampPosition[0] ,self.squareStampPosition[1],self.squareStampPosition[2]+ 50)
 
         #Take the next stamp
-        if shape == "round":
-            self.position_to_gcode(self.roundStampPosition[1] ,self.roundStampPosition[2], self.roundStampPosition[3] + 50)
-            self.position_to_gcode(self.roundStampPosition[1] ,self.roundStampPosition[2], self.roundStampPosition[3] )
-            self.position_to_gcode(self.roundStampPosition[1] -50, self.roundStampPosition[2], self.roundStampPosition[3] )
+        if shape == "Cercle":
+            self.position_to_gcode(self.roundStampPosition[0] ,self.roundStampPosition[1], self.roundStampPosition[2] + 50)
+            self.position_to_gcode(self.roundStampPosition[0] ,self.roundStampPosition[1], self.roundStampPosition[2] )
+            self.position_to_gcode(self.roundStampPosition[0] -50, self.roundStampPosition[1], self.roundStampPosition[2] )
 
-        if shape == "square":
-            self.position_to_gcode(self.squareStampPosition[1] ,self.squareStampPosition[2],self.squareStampPosition[3]+ 50)
-            self.position_to_gcode(self.squareStampPosition[1] ,self.squareStampPosition[2],self.squareStampPosition[3] )
-            self.position_to_gcode(self.roundStampPosition[1] -50, self.roundStampPosition[2], self.roundStampPosition[3] )
+        if shape == "Carré":
+            self.position_to_gcode(self.squareStampPosition[0] ,self.squareStampPosition[1],self.squareStampPosition[2]+ 50)
+            self.position_to_gcode(self.squareStampPosition[0] ,self.squareStampPosition[1],self.squareStampPosition[2] )
+            self.position_to_gcode(self.roundStampPosition[0] -50, self.roundStampPosition[1], self.roundStampPosition[2] )
 
         self.currentColor = color
         self.currentShape = shape
@@ -122,15 +123,15 @@ class Communication:
         stamp_counter = 0
 
         for x,y,shape,color  in positions:
+            print(self.pageSizeMm[0])
+            X = self.pixel_to_mm(x, self.pageSizePix[0],self.pageSizeMm[0])
+            Y = self.pixel_to_mm(y, self.pageSizePix[1],self.pageSizeMm[1])
             
-            X = self.pixel_to_mm(x, self.pageSizePix[1],self.pageSizeMm[1])
-            Y = self.pixel_to_mm(y, self.pageSizePix[1],self.pageSizeMm[2])
-
             [X,Y] = self.rotate_matrix(X,Y)
             #Checks is Stamp needs to be changed
             if shape != self.currentShape or color != self.currentColor:
                 self.change_stamp(color, shape)
-                self.ink_stamp(color)
+                self.ink_stamp(shape)
                 stamp_counter = 0
                 
             #Checks if ink needs to be applied on the stamp
@@ -143,7 +144,8 @@ class Communication:
 
         self.go_home()
 
-        self.send_Gcode()
+        print(self.gcode)
+        #self.send_Gcode()
 
         self.gcode = []
 

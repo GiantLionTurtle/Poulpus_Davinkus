@@ -21,17 +21,18 @@ class Communication:
         self.username = "poulpus"
         self.password = "davinkus"
 
-        self.client = paramiko.client.SSHClient()
-        self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        #self.client = paramiko.client.SSHClient()
+        #self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-        self.openSSH()
+        #self.openSSH()
 
         self.go_home()
 
 
     
-    def __del__(self):
-        self.closeSSH()
+    #def __del__(self):
+        #self.closeSSH()
+        
 
     def openSSH(self):
 

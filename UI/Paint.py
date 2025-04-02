@@ -10,12 +10,17 @@ from manip_image_simple import ManipImage
 from Shapes import draw_circle, draw_splatter, draw_square, draw_star, draw_triangle
 from Colors import ColorPicker
 from Canvas import Canvas
+from Communication import Communication
 import random
 import re
 
 class Window(QMainWindow):
     def __init__(self):
         super().__init__()
+
+        self.communication = Communication()
+
+
 
         #Création de la fenêtre principal
         self.setWindowTitle("Poulpus Davinkus")
@@ -122,7 +127,7 @@ class Window(QMainWindow):
 
         # Bouton pour exporter les formes en G-code
         self.export_button = QPushButton("Envoyer le dessin au robot")
-        self.export_button.clicked.connect(self.export_gcode)
+        self.export_button.clicked.connect(self.export_drawing)
         self.export_button.setFixedSize(150, 40)
         button_layout.addWidget(self.export_button)
 
@@ -310,16 +315,10 @@ class Window(QMainWindow):
         self.history.clear()
 
     #Envoie les coordonnée et les informations des formes sur un dessin
-    def export_gcode(self):
-        gcode_commands = []
-        for shape, position, color in self.shapes:
-            x = position.x()
-            y = position.y()
-            gcode_commands.append(f"SHAPE {shape} X{x} Y{y} COLOR {color}")
+    def export_drawing(self):
+        print(self.shapes)
+        self.communication.gcode_logic(self.shapes)
 
-        with open("output.gcode", "w") as f:
-            f.write("\n".join(gcode_commands))
-        print("G-code exported to output.gcode")
 
     #Efface la dernière forme placé par l'utilisateur
     def undo(self):
@@ -349,7 +348,9 @@ class Window(QMainWindow):
             painter.setBrush(QBrush(self.current_color, Qt.BrushStyle.SolidPattern))
 
             if self.current_shape in ["Cercle", "Carré", "Triangle", "Étoile", "Fleur"]:
-                self.shapes.append((self.current_shape, position, self.current_color.name()))
+                x = position.x()
+                y = position.y()
+                self.shapes.append((x, y, self.current_shape,self.current_color.name()))
                 self.draw_shape(self.current_shape, position, painter)
 
             painter.end()

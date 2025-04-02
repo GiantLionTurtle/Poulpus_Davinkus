@@ -39,6 +39,7 @@ class Window(QMainWindow):
         
         #Paths des différentes images disponibles dans la banque
         self.image_paths = {
+            
     "Shrek": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/shrek",
     "Coeur": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/heart",
     "Nemo": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/nemo",
@@ -253,6 +254,7 @@ class Window(QMainWindow):
 
         palette = self.palette()
         palette.setBrush(QPalette.ColorRole.Window, QBrush(gradient))
+
         self.setPalette(palette)
     
     #Fonction pour ajouter les bulles dans l'arrière plan

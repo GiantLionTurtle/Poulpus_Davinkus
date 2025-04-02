@@ -6,37 +6,38 @@ class Communication:
 
     def __init__(self):
         self.hop = 30 #hop height constant in millimeter
-        self.flowRate = 5000 
+        self.flowRate = 2000 
         self.pageSizeMm = [210, 297]
         self.pageSizePix = [400, 600] # NEEDS TO BE CHANGED
-        self.pageHeight = 0  #height in the Z axis to stamp
+        self.pageHeight = 60  #height in the Z axis to stamp
         self.gcode = []
         self.currentColor = None
         self.currentShape = None
-        self.roundStampPosition  = [15,20,60]  #Arbitrary position (needs to be tested)
-        self.squareStampPosition = [15,25,60]  #Arbitrary position (needs to be tested)
-        self.inkPoolPosition = [30,45,10] #Arbitrary position (needs to be tested)
+        self.roundStampPosition  = [15,20,100]  #Arbitrary position (needs to be tested)
+        self.squareStampPosition = [15,25,100]  #Arbitrary position (needs to be tested)
+        self.inkPoolPosition = [30,45,40] #Arbitrary position (needs to be tested)
         self.refillValue = 25
         self.host = "poulpus.local"
         self.username = "poulpus"
         self.password = "davinkus"
 
-        #self.client = paramiko.client.SSHClient()
-        #self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self.client = paramiko.client.SSHClient()
+        self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-        #self.openSSH()
+        self.openSSH()
 
         
 
 
     
-    #def __del__(self):
-        #self.closeSSH()
+    def __del__(self):
+        print("Closing ssh!")
+        self.closeSSH()
         
 
     def openSSH(self):
 
-        self.client.connect(self.host, username=self.username, password=self.password)
+        self.client.connect(self.host,22, username=self.username, password=self.password)
 
     def closeSSH(self):
         
@@ -49,10 +50,13 @@ class Communication:
         return PositionMeters
     
     def rotate_matrix(self,x,y):
-        x = x- (self.pageSizeMm[0])/2
-        y = y - (self.pageSizeMm[1])/2
-        X = -np.cos(np.pi/3)*x + np.sin(np.pi/3)*x 
-        Y = np.sin(np.pi/3)*y + np.cos(np.pi/3)*y 
+        x = x - (self.pageSizeMm[0])/2
+        y = self.pageSizeMm[1] - y - (self.pageSizeMm[1])/2
+        print("recentered X={}, Y={}".format(x, y))
+        angle = -np.pi/6;
+        X = np.cos(angle)*x - np.sin(angle)*y 
+        Y = np.sin(angle)*x + np.cos(angle)*y 
+        print("rotated X={}, Y={}".format(X, Y))
 
         return [X,Y]
         
@@ -109,8 +113,10 @@ class Communication:
     
     def send_Gcode(self):
         msg = ""
+        k = 0
         for i in self.gcode:
-            msg = msg + self.gcode[i]
+            msg = msg + self.gcode[k]
+            k+=1
         
         stdin, stdout, stderr = self.client.exec_command("echo '{}' >> /tmp/printer".format(msg))
         
@@ -123,16 +129,16 @@ class Communication:
         stamp_counter = 0
 
         for x,y,shape,color  in positions:
-            print(self.pageSizeMm[0])
+            
             X = self.pixel_to_mm(x, self.pageSizePix[0],self.pageSizeMm[0])
             Y = self.pixel_to_mm(y, self.pageSizePix[1],self.pageSizeMm[1])
-            
+            print("to mm X={}, Y={}".format(X, Y))
             [X,Y] = self.rotate_matrix(X,Y)
             #Checks is Stamp needs to be changed
-            if shape != self.currentShape or color != self.currentColor:
-                self.change_stamp(color, shape)
-                self.ink_stamp(shape)
-                stamp_counter = 0
+            #if shape != self.currentShape or color != self.currentColor:
+                #self.change_stamp(color, shape)
+                #self.ink_stamp(shape)
+                #stamp_counter = 0
                 
             #Checks if ink needs to be applied on the stamp
             if stamp_counter >= self.refillValue:
@@ -145,7 +151,7 @@ class Communication:
         self.go_home()
 
         print(self.gcode)
-        #self.send_Gcode()
+        self.send_Gcode()
 
         self.gcode = []
 

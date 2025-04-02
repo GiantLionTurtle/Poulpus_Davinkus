@@ -48,10 +48,17 @@ class Communication:
         PositionMeters = (positionPixel/refPixels) * refMm
         return PositionMeters
     
+    def rotate_matrix(self,x,y):
+        
+        X = -np.cos(np.pi/3)*x + np.sin(np.pi/3)*x - (self.pageSizeMm[1])/2
+        Y = np.sin(np.pi/3)*y + np.cos(np.pi/3)*y - (self.pageSizeMm[2])/2
+
+        return [X,Y]
+        
 
     def position_to_gcode(self,X,Y, Z):  #Positions en pixels sauf Z, le changement d'unites ce fera ici
 
-        self.gcode.append(f"G1 X{x:.2f} Y{y:.2f} Z{Z:.2f} F{self.flowRate}\n")
+        self.gcode.append(f"G1 X{X:.2f} Y{Y:.2f} Z{Z:.2f} F{self.flowRate}\n")
 
     def go_home(self):
 
@@ -115,9 +122,11 @@ class Communication:
         stamp_counter = 0
 
         for x,y,shape,color  in positions:
-        
-            X = self.pixel_to_mm(x, self.pageSizePix(1), self.pageSizeMm(1))
-            Y = self.pixel_to_mm(y, self.pageSizePix(2), self.pageSizeMm(2))
+            
+            X = self.pixel_to_mm(x, self.pageSizePix[1],self.pageSizeMm[1])
+            Y = self.pixel_to_mm(y, self.pageSizePix[1],self.pageSizeMm[2])
+
+            [X,Y] = self.rotate_matrix(X,Y)
             #Checks is Stamp needs to be changed
             if shape != self.currentShape or color != self.currentColor:
                 self.change_stamp(color, shape)
@@ -134,10 +143,11 @@ class Communication:
 
         self.go_home()
 
-        self.write_gcode(self.text_file,self.output_path)
+        self.send_Gcode()
 
         self.gcode = []
 
         
+
 
 

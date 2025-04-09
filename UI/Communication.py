@@ -48,7 +48,7 @@ class Communication:
         self.openSSH()
 
     def __del__(self):
-        print("Closing ssh!")
+        print("Fermeture du tunel ssh!")
         self.closeSSH()
         
 
@@ -62,11 +62,10 @@ class Communication:
 
             self.client.connect(self.host,22, username=self.username, password=self.password)
         except Exception as e:
-            print("Pas branché")
+            print("Incapable d'etablir la connection ssh")
             pass
 
     def closeSSH(self):
-        
         self.client.close()
 
     
@@ -80,20 +79,16 @@ class Communication:
     def rotate_matrix(self,x,y,z):
         x = -(x - (self.pageSizeMm[0])/2)
         y = self.pageSizeMm[1] - y - (self.pageSizeMm[1])/2
-        print("recentered X={}, Y={}".format(x, y))
         angle = -np.pi/6
         X = np.cos(angle)*x - np.sin(angle)*y 
         Y = np.sin(angle)*x + np.cos(angle)*y 
-        print("rotated X={}, Y={}".format(X, Y))
 
         return [X,Y,z]
     
     def rotate_seq(self, seq):
         out = []
         for elem in seq:
-            print("Rotate elem {}".format(elem))
             out.append(self.rotate_matrix(elem[0], elem[1], elem[2]))
-            print("rotated elem {}".format(out[len(out)-1]))
         return out
 
     def position_to_gcode(self, X, Y, Z):  #Positions en pixels sauf Z, le changement d'unites ce fera ici
@@ -142,7 +137,6 @@ class Communication:
         return
     def send_seq(self, seq):
         for elem in seq:
-            print("Send seq: {}".format(elem))
             self.position_to_gcode(elem[0], elem[1], elem[2])
 
     def ink_stamp(self,color):

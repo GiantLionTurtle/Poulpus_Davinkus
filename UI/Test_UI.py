@@ -16,7 +16,7 @@ class Window(QMainWindow):
         self.combox.addItem("Charlotte")
         self.combox.addItem("la")
         self.combox.addItem("thug")
-        self.combox.addItem(QIcon("C:/S4-Projet/Poulpus_Davinkus/UI/lebron"), "LBJ")
+        self.combox.addItem(QIcon("{}/lebron".format(self.workspace_path)), "LBJ")
 
         self.button = QPushButton("I am a button")
 

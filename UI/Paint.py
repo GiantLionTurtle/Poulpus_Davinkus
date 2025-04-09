@@ -13,6 +13,7 @@ from Canvas import Canvas
 from Communication import Communication
 import random
 import re
+import pathlib
 
 class Window(QMainWindow):
     def __init__(self):
@@ -36,20 +37,21 @@ class Window(QMainWindow):
         self.history = []
         self.image_path = None
         self.drwing_path = None
-        
+        self.workspace_path = pathlib.Path(__file__).parent.resolve()
+
         #Paths des différentes images disponibles dans la banque
         self.image_paths = {
-    "Shrek": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/shrek",
-    "Coeur": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/heart.png",
-    "Canadiens": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/canadien_logo",
-    "Capybara": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/capybara",
-    "Poulpe": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/Poulpus_Davinkus",
+    "Shrek": "{}/Images/shrek".format(self.workspace_path),
+    "Coeur": "{}/Images/heart.png".format(self.workspace_path),
+    "Canadiens": "{}/Images/canadien_logo".format(self.workspace_path),
+    "Capybara": "{}/Images/capybara".format(self.workspace_path),
+    "Poulpe": "{}/Images/Poulpus_Davinkus".format(self.workspace_path),
 }
         #path des différents dessins disponibles dans la banque
         self.drawing_paths = {
-    "Foret": "C:/S4-Projet/Poulpus_Davinkus/drawings/foret.txt",
-    "Chat": "C:/S4-Projet/Poulpus_Davinkus/drawings/chat.txt",
-    "Voiture": "C:/S4-Projet/Poulpus_Davinkus/drawings/voiture.txt"
+    "Foret": "{}/drawings/foret.txt".format(self.workspace_path),
+    "Chat": "{}/drawings/chat.txt".format(self.workspace_path),
+    "Voiture": "{}/drawings/voiture.txt".format(self.workspace_path)
 }
         
         # Main container
@@ -142,7 +144,7 @@ class Window(QMainWindow):
         #self.manip_image = ManipImage()
         #self.analyze_button = QPushButton("Appuie pour 5 big BOOMS")
         self.analyze_button = QPushButton()
-        self.analyze_button.setIcon(QIcon("C:/S4-Projet/Poulpus_Davinkus/UI/Bouton.png"))
+        self.analyze_button.setIcon(QIcon("{}/UI/Bouton.png".format(self.workspace_path)))
         self.analyze_button.setIconSize(QSize(150, 40))
         self.analyze_button.clicked.connect(self.test_analyze)
         self.analyze_button.setFixedSize(150, 40)
@@ -173,6 +175,9 @@ class Window(QMainWindow):
         self.pen = QPen(QColor("black"))
         self.pen.setWidth(6)
 
+    def closeEvent(self, event):
+        self.communication = None
+
     #Fonction pour afficher l'image sélectionné dans la banque
     def image_change(self, s):
         self.image_path = self.image_paths.get(s)
@@ -186,8 +191,8 @@ class Window(QMainWindow):
 
     #Lance l'analyse d'image sur l'image présente sur la toile de gauche
     def test_analyze(self):
-        output_path = os.path.abspath("C:/S4-Projet/Poulpus_Davinkus/UI/output.png")
-        output_path2 = os.path.abspath("C:/S4-Projet/Poulpus_Davinkus/UI/outputgcode.txt")
+        output_path = os.path.abspath("{}/output.png".format(self.workspace_path))
+        output_path2 = os.path.abspath("{}/outputgcode.txt".format(self.workspace_path))
         
         # Accède à la pixmap de uploader
         pixmap = self.uploader.get_pixmap()

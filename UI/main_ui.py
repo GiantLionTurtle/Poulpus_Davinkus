@@ -6,6 +6,7 @@ from manip_image_advanced import ManipImageAdvanced
 import cv2 as cv
 import sys
 import os
+import pathlib
 
 #Class pour upload une image
 class MainWindow(QWidget):
@@ -13,6 +14,7 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
+        self.workspace_path = pathlib.Path(__file__).parent.resolve()
 
     def initUI(self):
         self.setWindowTitle("Poulpus Davinkus")
@@ -47,7 +49,6 @@ class MainWindow(QWidget):
         file_path, _ = file_dialog.getOpenFileName(
            self, "Open Image File", "", "Images (*.png *.jpg *.jpeg *.bmp *.gif)"
         )
-        #file_path = os.path.expanduser("~/Documents/School/S4/Projet/lesun.jpg")
         if file_path:
             pixmap = QPixmap(file_path)
             if not pixmap.isNull():
@@ -77,8 +78,8 @@ class MainWindow(QWidget):
                 self.image_label.setText("Failed to load image!")
     
     def test_analysis(self):
-        output_path = os.path.abspath("C:/S4-Projet/Poulpus_Davinkus/UI/output.png")
-        output_path2 = os.path.abspath("C:/S4-Projet/Poulpus_Davinkus/UI/outputgcode.txt")
+        output_path = os.path.abspath("{}/output.png".format(self.workspace_path))
+        output_path2 = os.path.abspath("{}/outputgcode.txt".format(self.workspace_path))
         cv_img = ManipImage(pixmap=self.final_pixmap)
         cv_img.load_image()
         cv_img.analyze_image()
@@ -86,8 +87,8 @@ class MainWindow(QWidget):
         cv_img.convert_gcode(output_path2, (216, 279), (400, 600))
 
     def testAnalysis2(self):
-        output_path = os.path.expanduser("~/Documents/School/S4/Projet/output.png")
-        output_path2 = os.path.expanduser("~/Documents/School/S4/Projet/gcode.txt")
+        output_path = os.path.expanduser("{}/output.png".format(self.workspace_path))
+        output_path2 = os.path.expanduser("{}/gcode.txt".format(self.workspace_path))
 
         cv_img = ManipImageAdvanced(pixmap=self.final_pixmap)
         cv_img.initalizeImageFromPixmap()

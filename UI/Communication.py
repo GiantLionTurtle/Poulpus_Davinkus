@@ -13,10 +13,10 @@ class Communication:
         self.gcode = []
         self.currentColor = None
         self.currentShape = None
-        self.homeNotHome = [0,0,80]
-        self.centerStampOut  = [95,-60,82] 
-        self.centerStampIn = [125,-75,82]
-        self.centerStampOver = [78, -83, 100]
+        self.homeNotHome = [0,0,120]
+        self.centerStampOut  = self.rotate_matrix(30 , self.pageSizeMm[1]/2 + 5, 85) 
+        self.centerStampIn = self.rotate_matrix(-47, self.pageSizeMm[1]/2 + 5, 78)
+        self.centerStampOver = self.rotate_matrix(-47, self.pageSizeMm[1]/2 + 5, 100)
         self.leftStampOut = [80,-100,82] #Position of left stamp holder (left from front of holder pov)
         self.leftStampIn = [100,-110,82]
         self.leftStampOver = [100,-110,100]
@@ -34,10 +34,6 @@ class Communication:
 
         self.openSSH()
 
-        
-
-
-    
     def __del__(self):
         print("Closing ssh!")
         self.closeSSH()
@@ -63,8 +59,8 @@ class Communication:
         PositionMeters = (positionPixel/refPixels) * refMm
         return PositionMeters
     
-    def rotate_matrix(self,x,y):
-        x = x - (self.pageSizeMm[0])/2
+    def rotate_matrix(self,x,y,z):
+        x = -(x - (self.pageSizeMm[0])/2)
         y = self.pageSizeMm[1] - y - (self.pageSizeMm[1])/2
         print("recentered X={}, Y={}".format(x, y))
         angle = -np.pi/6
@@ -72,10 +68,10 @@ class Communication:
         Y = np.sin(angle)*x + np.cos(angle)*y 
         print("rotated X={}, Y={}".format(X, Y))
 
-        return [X,Y]
+        return [X,Y,z]
         
 
-    def position_to_gcode(self,X,Y, Z):  #Positions en pixels sauf Z, le changement d'unites ce fera ici
+    def position_to_gcode(self, X, Y, Z):  #Positions en pixels sauf Z, le changement d'unites ce fera ici
 
         self.gcode.append(f"G1 X{X:.2f} Y{Y:.2f} Z{Z:.2f} F{self.flowRate}\n")
 
@@ -85,9 +81,9 @@ class Communication:
     
     def stamp_path(self, x, y):
 
-        self.position_to_gcode(x, y, self.pageHeight +self.hop)
+        self.position_to_gcode(x, y, self.pageHeight + self.hop)
         self.position_to_gcode(x, y, self.pageHeight)
-        self.position_to_gcode(x, y, self.pageHeight +self.hop)
+        self.position_to_gcode(x, y, self.pageHeight + self.hop)
     
     
     def change_stamp(self, color, shape):
@@ -99,34 +95,34 @@ class Communication:
         #Put the stamp in the rack
         if self.currentShape == "Cercle":
             self.position_to_gcode(self.leftStampOut[0], self.leftStampOut[1], self.leftStampOut[2] )
-            self.position_to_gcode(self.leftStampIn[0] ,self.leftStampIn[1], self.leftStampIn[2] )
-            self.position_to_gcode(self.leftStampOver[0],self.leftStampOver[1], self.leftStampOver[2])
+            self.position_to_gcode(self.leftStampIn[0], self.leftStampIn[1], self.leftStampIn[2] )
+            self.position_to_gcode(self.leftStampOver[0], self.leftStampOver[1], self.leftStampOver[2])
 
         if self.currentShape == "Carré":
-            self.position_to_gcode(self.centerStampOut[0], self.centerStampOut[1] , self.centerStampOut[2])
-            self.position_to_gcode(self.centerStampIn[0] ,self.centerStampIn[1], self.centerStampIn[2])
-            self.position_to_gcode(self.centerStampOver[0] ,self.centerStampOver[1],self.centerStampOver[2])
+            self.position_to_gcode(self.centerStampOut[0], self.centerStampOut[1], self.centerStampOut[2])
+            self.position_to_gcode(self.centerStampIn[0], self.centerStampIn[1], self.centerStampIn[2])
+            self.position_to_gcode(self.centerStampOver[0],self.centerStampOver[1], self.centerStampOver[2])
 
         if self.currentShape == "Triangle":
-            self.position_to_gcode(self.rightStampOut[0], self.rightStampOut[1] , self.rightStampOut[2])
-            self.position_to_gcode(self.rightStampIn[0] ,self.rightStampIn[1], self.rightStampIn[2])
-            self.position_to_gcode(self.rightStampOver[0] ,self.rightStampOver[1],self.rightStampOver[2])
+            self.position_to_gcode(self.rightStampOut[0], self.rightStampOut[1], self.rightStampOut[2])
+            self.position_to_gcode(self.rightStampIn[0], self.rightStampIn[1], self.rightStampIn[2])
+            self.position_to_gcode(self.rightStampOver[0], self.rightStampOver[1], self.rightStampOver[2])
 
         #Take the next stamp
         if shape == "Cercle":
-            self.position_to_gcode(self.leftStampOver[0],self.leftStampOver[1], self.leftStampOver[2])
-            self.position_to_gcode(self.leftStampIn[0] ,self.leftStampIn[1], self.leftStampIn[2] )
+            self.position_to_gcode(self.leftStampOver[0], self.leftStampOver[1], self.leftStampOver[2])
+            self.position_to_gcode(self.leftStampIn[0], self.leftStampIn[1], self.leftStampIn[2] )
             self.position_to_gcode(self.leftStampOut[0], self.leftStampOut[1], self.leftStampOut[2] )
 
         if shape == "Carré":
-            self.position_to_gcode(self.centerStampOver[0] ,self.centerStampOver[1],self.centerStampOver[2])
-            self.position_to_gcode(self.centerStampIn[0] ,self.centerStampIn[1], self.centerStampIn[2])
-            self.position_to_gcode(self.centerStampOut[0], self.centerStampOut[1] , self.centerStampOut[2])
+            self.position_to_gcode(self.centerStampOver[0], self.centerStampOver[1], self.centerStampOver[2])
+            self.position_to_gcode(self.centerStampIn[0], self.centerStampIn[1], self.centerStampIn[2])
+            self.position_to_gcode(self.centerStampOut[0], self.centerStampOut[1], self.centerStampOut[2])
 
         if shape == "Triangle":
-            self.position_to_gcode(self.rightStampOver[0] ,self.rightStampOver[1],self.rightStampOver[2])
-            self.position_to_gcode(self.rightStampIn[0] ,self.rightStampIn[1], self.rightStampIn[2])
-            self.position_to_gcode(self.rightStampOver[0] ,self.rightStampOver[1],self.rightStampOver[2])
+            self.position_to_gcode(self.rightStampOver[0], self.rightStampOver[1], self.rightStampOver[2])
+            self.position_to_gcode(self.rightStampIn[0], self.rightStampIn[1], self.rightStampIn[2])
+            self.position_to_gcode(self.rightStampOver[0], self.rightStampOver[1], self.rightStampOver[2])
 
         self.currentColor = color
         self.currentShape = shape
@@ -136,9 +132,9 @@ class Communication:
         normalFr = self.flowRate
         self.flowRate = normalFr/2
 
-        self.position_to_gcode(self.ink_stamp[0],self.ink_stamp[1],self.ink_stamp[2] + 50)
-        self.position_to_gcode(self.ink_stamp[0],self.ink_stamp[1],self.ink_stamp[2])
-        self.position_to_gcode(self.ink_stamp[0],self.ink_stamp[1],self.ink_stamp[2] + 50)
+        self.position_to_gcode(self.inkPoolPosition[0],self.inkPoolPosition[1],self.inkPoolPosition[2] + 50)
+        self.position_to_gcode(self.inkPoolPosition[0],self.inkPoolPosition[1],self.inkPoolPosition[2])
+        self.position_to_gcode(self.inkPoolPosition[0],self.inkPoolPosition[1],self.inkPoolPosition[2] + 50)
 
         #Set normal flow rate back
         self.flowRate = normalFr
@@ -151,6 +147,8 @@ class Communication:
             msg = msg + self.gcode[k]
             k+=1
         
+        self.gcode = [] 
+        print("Sending: '{}'".format(msg))
         stdin, stdout, stderr = self.client.exec_command("echo '{}' >> /tmp/printer".format(msg))
         
 
@@ -158,20 +156,22 @@ class Communication:
     # this function generate the total path, including hops and change of color/shape of stamps
     def gcode_logic(self, positions): #positions is one or n positions
         
-        self.position_to_gcode(self.homeNotHome[0],self.homeNotHome[1],self.homeNotHome[2])
+        self.go_home()
+        self.position_to_gcode(self.homeNotHome[0], self.homeNotHome[1], self.homeNotHome[2])
         stamp_counter = 0
 
         for x,y,shape,color  in positions:
             
-            X = self.pixel_to_mm(x, self.pageSizePix[0],self.pageSizeMm[0])
-            Y = self.pixel_to_mm(y, self.pageSizePix[1],self.pageSizeMm[1])
+            X = self.pixel_to_mm(x, self.pageSizePix[0], self.pageSizeMm[0])
+            Y = self.pixel_to_mm(y, self.pageSizePix[1], self.pageSizeMm[1])
             print("to mm X={}, Y={}".format(X, Y))
-            [X,Y] = self.rotate_matrix(X,Y)
-            #Checks is Stamp needs to be changed
-            #if shape != self.currentShape or color != self.currentColor:
-                #self.change_stamp(color, shape)
+            [X,Y,Z] = self.rotate_matrix(X,Y,self.pageHeight)
+
+            #Checks if Stamp needs to be changed
+            if shape != self.currentShape or color != self.currentColor:
+                self.change_stamp(color, shape)
                 #self.ink_stamp(shape)
-                #stamp_counter = 0
+                stamp_counter = 0
                 
             #Checks if ink needs to be applied on the stamp
             if stamp_counter >= self.refillValue:
@@ -181,12 +181,7 @@ class Communication:
             self.stamp_path(X, Y)
             stamp_counter += 1
 
-        self.go_home()
-
-        print(self.gcode)
         self.send_Gcode()
-
-        self.gcode = []
 
         
 

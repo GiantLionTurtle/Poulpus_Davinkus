@@ -39,9 +39,8 @@ class Window(QMainWindow):
         
         #Paths des différentes images disponibles dans la banque
         self.image_paths = {
-
     "Shrek": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/shrek",
-    "Coeur": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/heart",
+    "Coeur": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/heart.png",
     "Canadiens": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/canadien_logo",
     "Capybara": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/capybara",
     "Poulpe": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/Poulpus_Davinkus",
@@ -244,7 +243,7 @@ class Window(QMainWindow):
         self.redraw_canvas()
 
 
-    #Création de l'arrière plan de type "Océan"
+    #Création de l'arrière plan de type "Océan" avec un gradient de différentes teintes de bleu
     def set_ocean_gradient_background(self):
         gradient = QLinearGradient(0, 0, 0, self.height())
         gradient.setColorAt(0, QColor(0, 105, 148))

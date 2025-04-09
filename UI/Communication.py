@@ -2,6 +2,12 @@ import numpy as np
 import cv2 as cv
 import paramiko
 
+def off(coord, vec):
+    out = [0, 0, 0]
+    for i in range(0, 3):
+        out[i] = coord[i] + vec[i]
+    return out
+
 class Communication:
 
     def __init__(self):
@@ -14,15 +20,22 @@ class Communication:
         self.currentColor = None
         self.currentShape = None
         self.homeNotHome = [0,0,120]
-        self.centerStampOut  = self.rotate_matrix(30 , self.pageSizeMm[1]/2 + 5, 85) 
-        self.centerStampIn = self.rotate_matrix(-47, self.pageSizeMm[1]/2 + 5, 78)
-        self.centerStampOver = self.rotate_matrix(-47, self.pageSizeMm[1]/2 + 5, 100)
-        self.leftStampOut = [80,-100,82] #Position of left stamp holder (left from front of holder pov)
-        self.leftStampIn = [100,-110,82]
-        self.leftStampOver = [100,-110,100]
-        self.rightStampOut = [110,-20,82]
-        self.rightStampIn = [145, -25, 82]
-        self.rightStampOver = [145, -25, 100]
+
+        centerStamp_l = [-47, self.pageSizeMm[1]/2 + 5, 78]
+        leftStamp_l = [-47, self.pageSizeMm[1]/2 + 41, 78]
+        rightStamp_l = [-47, self.pageSizeMm[1]/2  - 32, 78]
+
+        side_wiggle_amp = 15;
+        self.centerTake_seq = self.make_take(centerStamp_l, side_wiggle_amp)
+        self.centerDrop_seq = self.make_drop(centerStamp_l)
+
+        self.leftTake_seq = self.make_take(leftStamp_l, side_wiggle_amp)
+        self.leftDrop_seq = self.make_drop(leftStamp_l)
+
+        self.rightTake_seq = self.make_take(rightStamp_l, side_wiggle_amp)
+        self.rightDrop_seq = self.make_drop(rightStamp_l)
+
+        print(self.centerTake_seq)
         self.inkPoolPosition = [30,45,40] #Arbitrary position (needs to be tested)
         self.refillValue = 25
         self.host = "poulpus.local"
@@ -39,6 +52,11 @@ class Communication:
         self.closeSSH()
         
 
+    def make_take(self, init, side_wiggle):
+        return self.rotate_seq([off(init, [77, 0, 7]), init, off(init, [0, side_wiggle, 8]), off(init, [0, -side_wiggle, 8]), off(init, [0, 0, 8]), off(init, [77, 0, 7])])
+    def make_drop(self, init):
+        return  self.rotate_seq([off(init, [77, 0, 7]), init, off(init, [0, 0, 40])])
+    
     def openSSH(self):
         try:
 
@@ -69,7 +87,14 @@ class Communication:
         print("rotated X={}, Y={}".format(X, Y))
 
         return [X,Y,z]
-        
+    
+    def rotate_seq(self, seq):
+        out = []
+        for elem in seq:
+            print("Rotate elem {}".format(elem))
+            out.append(self.rotate_matrix(elem[0], elem[1], elem[2]))
+            print("rotated elem {}".format(out[len(out)-1]))
+        return out
 
     def position_to_gcode(self, X, Y, Z):  #Positions en pixels sauf Z, le changement d'unites ce fera ici
 
@@ -89,44 +114,37 @@ class Communication:
     def change_stamp(self, color, shape):
         
 
-        self.position_to_gcode(self.homeNotHome[0],self.homeNotHome[1],self.homeNotHome[2])
+        # self.position_to_gcode(self.homeNotHome[0],self.homeNotHome[1],self.homeNotHome[2])
 
         #Sequences needs to be tested to find out the correct offsets and the correct Stamp positions
         #Put the stamp in the rack
         if self.currentShape == "Cercle":
-            self.position_to_gcode(self.leftStampOut[0], self.leftStampOut[1], self.leftStampOut[2] )
-            self.position_to_gcode(self.leftStampIn[0], self.leftStampIn[1], self.leftStampIn[2] )
-            self.position_to_gcode(self.leftStampOver[0], self.leftStampOver[1], self.leftStampOver[2])
-
+            self.send_seq(self.leftDrop_seq)
+            
         if self.currentShape == "Carré":
-            self.position_to_gcode(self.centerStampOut[0], self.centerStampOut[1], self.centerStampOut[2])
-            self.position_to_gcode(self.centerStampIn[0], self.centerStampIn[1], self.centerStampIn[2])
-            self.position_to_gcode(self.centerStampOver[0],self.centerStampOver[1], self.centerStampOver[2])
+            self.send_seq(self.centerDrop_seq)
 
         if self.currentShape == "Triangle":
-            self.position_to_gcode(self.rightStampOut[0], self.rightStampOut[1], self.rightStampOut[2])
-            self.position_to_gcode(self.rightStampIn[0], self.rightStampIn[1], self.rightStampIn[2])
-            self.position_to_gcode(self.rightStampOver[0], self.rightStampOver[1], self.rightStampOver[2])
-
+            self.send_seq(self.rightDrop_seq)
+ 
         #Take the next stamp
         if shape == "Cercle":
-            self.position_to_gcode(self.leftStampOver[0], self.leftStampOver[1], self.leftStampOver[2])
-            self.position_to_gcode(self.leftStampIn[0], self.leftStampIn[1], self.leftStampIn[2] )
-            self.position_to_gcode(self.leftStampOut[0], self.leftStampOut[1], self.leftStampOut[2] )
+            self.send_seq(self.leftTake_seq)
 
         if shape == "Carré":
-            self.position_to_gcode(self.centerStampOver[0], self.centerStampOver[1], self.centerStampOver[2])
-            self.position_to_gcode(self.centerStampIn[0], self.centerStampIn[1], self.centerStampIn[2])
-            self.position_to_gcode(self.centerStampOut[0], self.centerStampOut[1], self.centerStampOut[2])
+            self.send_seq(self.centerTake_seq)
 
         if shape == "Triangle":
-            self.position_to_gcode(self.rightStampOver[0], self.rightStampOver[1], self.rightStampOver[2])
-            self.position_to_gcode(self.rightStampIn[0], self.rightStampIn[1], self.rightStampIn[2])
-            self.position_to_gcode(self.rightStampOver[0], self.rightStampOver[1], self.rightStampOver[2])
+            self.send_seq(self.rightTake_seq)
 
         self.currentColor = color
         self.currentShape = shape
         return
+    def send_seq(self, seq):
+        for elem in seq:
+            print("Send seq: {}".format(elem))
+            self.position_to_gcode(elem[0], elem[1], elem[2])
+
     def ink_stamp(self,color):
         #Set slower flow rate to avoid big Splash
         normalFr = self.flowRate

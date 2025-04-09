@@ -39,10 +39,9 @@ class Window(QMainWindow):
         
         #Paths des différentes images disponibles dans la banque
         self.image_paths = {
-            
+
     "Shrek": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/shrek",
     "Coeur": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/heart",
-    "Nemo": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/nemo",
     "Canadiens": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/canadien_logo",
     "Capybara": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/capybara",
     "Poulpe": "C:/S4-Projet/Poulpus_Davinkus/UI/Images/Poulpus_Davinkus",
@@ -157,7 +156,6 @@ class Window(QMainWindow):
         self.image_selector.addItem("Choisir une image")
         self.image_selector.addItem(QIcon(self.image_paths.get("Shrek")), "Shrek")
         self.image_selector.addItem(QIcon(self.image_paths.get("Heart")), "Coeur")
-        self.image_selector.addItem(QIcon(self.image_paths.get("Nemo")), "Nemo")
         self.image_selector.addItem(QIcon(self.image_paths.get("Canadiens")), "Canadiens")
         self.image_selector.addItem(QIcon(self.image_paths.get("Capybara")), "Capybara")
         self.image_selector.addItem(QIcon(self.image_paths.get("Poulpe")), "Poulpe")

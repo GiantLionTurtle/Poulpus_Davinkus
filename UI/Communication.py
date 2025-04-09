@@ -44,8 +44,12 @@ class Communication:
         
 
     def openSSH(self):
+        try:
 
-        self.client.connect(self.host,22, username=self.username, password=self.password)
+            self.client.connect(self.host,22, username=self.username, password=self.password)
+        except Exception as e:
+            print("Pas branché")
+            pass
 
     def closeSSH(self):
         
@@ -53,6 +57,8 @@ class Communication:
 
     
     def pixel_to_mm(self,positionPixel, refPixels, refMm):
+
+
 
         PositionMeters = (positionPixel/refPixels) * refMm
         return PositionMeters

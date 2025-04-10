@@ -150,17 +150,15 @@ class Communication:
         normalFr = self.flowRate
         
         pool_index = 0
-        if color == "#ff0000": # Red
+        # if color == "#ff0000": # Red
+        #     pool_index = 0
+        if color == "#ffff00": # Blue
             pool_index = 0
-        # elif color == "#ffff00": # Blue
-        #     pool_index = 1
         elif color == "#00ffff": # Yellow
             pool_index = 1
         else: # Black
             pool_index = 2
 
-        print("Index={}".format(pool_index))
-        print("Color={}".format(color))
         self.position_to_gcode(self.inkPoolPosition[pool_index][0], self.inkPoolPosition[pool_index][1], self.inkPoolPosition[pool_index][2] + 40)
         self.flowRate = normalFr/2
         self.position_to_gcode(self.inkPoolPosition[pool_index][0], self.inkPoolPosition[pool_index][1], self.inkPoolPosition[pool_index][2] + 5)

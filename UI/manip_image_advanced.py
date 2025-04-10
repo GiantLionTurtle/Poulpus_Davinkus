@@ -82,8 +82,8 @@ class ManipImageAdvanced:
             elif(self.getImageName() == "shrek.png"):
                 lower_bound = np.array([0, 0, 0])
                 upper_bound = np.array([180, 0, 255])
-                mask_black = cv.inRange(image_hsv, lower_bound, upper_bound)
-                masked_image = cv.bitwise_not(mask_black)
+                mask_white = cv.inRange(image_hsv, lower_bound, upper_bound)
+                masked_image = cv.bitwise_not(mask_white)
             elif(self.getImageName() == "canadien_logo.png"):
                 lower_bound = np.array([0, 0, 0])
                 upper_bound = np.array([180, 0, 255])
@@ -108,9 +108,9 @@ class ManipImageAdvanced:
                 mask_white = cv.inRange(image_hsv, lower_bound, upper_bound)
                 masked_image = cv.bitwise_not(mask_white)
 
-            plt.figure()
-            plt.imshow(masked_image)
-            plt.show()
+            # plt.figure()
+            # plt.imshow(masked_image)
+            # plt.show()
 
             self.image = masked_image
         except Exception as e:
@@ -122,10 +122,10 @@ class ManipImageAdvanced:
             edges = cv.Canny(img, 100, 200)
             contours, _ = cv.findContours(edges, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
             print(f"Number of contours: {len(contours)}")
-            #Let us see the contours, masked image has shape == 2 just as grayscale
-            img_bgr = cv.cvtColor(img, cv.COLOR_GRAY2RGB)
-            # cv.drawContours(img_bgr, contours, -1, (0, 0, 255), 2)
 
+            #Let us see the contours, masked image has shape == 2 just as grayscale
+            # img_bgr = cv.cvtColor(img, cv.COLOR_GRAY2RGB)
+            # cv.drawContours(img_bgr, contours, -1, (0, 0, 255), 2)
             # plt.figure()
             # plt.imshow(img_bgr)
             # plt.show()
@@ -283,29 +283,38 @@ class ManipImageAdvanced:
 
             print(f'Nombre de contours desormais:{len(merged_contours)}')
 
+            #Semble pas vraiment aider maintenant que trace les contours, pas l'interieur
             #Adjustments specific for each picture:
-            if self.getImageName() == "heart.png":
-                contour1 = merged_contours[0]
-                contour2 = merged_contours[3]
+            # if self.getImageName() == "heart.png":
+            #     contour1 = merged_contours[0]
+            #     contour2 = merged_contours[3]
 
-                merged = np.concatenate([contour1,contour2[::-1]])
+            #     merged = np.concatenate([contour1,contour2[::-1]])
                 
-                merged_contours[0] = merged
-                del merged_contours[3]
+            #     merged_contours[0] = merged
+            #     del merged_contours[3]
                
-                if len(merged_contours) >3:
-                    i = len(merged_contours)-1
-                    while len(merged_contours) != 3:
-                        del merged_contours[i]
-                        i = i-1
+            #     if len(merged_contours) >3:
+            #         i = len(merged_contours)-1
+            #         while len(merged_contours) != 3:
+            #             del merged_contours[i]
+            #             i = i-1
+            # if self.getImageName() == "shrek.png":
+            #     contour0 = merged_contours[0]
+            #     contour1 = merged_contours[1]
+
+            #     merged = np.concatenate([contour1[::-1],contour0])
+
+            #     merged_contours[0] = merged
+            #     del merged_contours[1]
             
-            #Test if contour reassembles correctly
-            # img = self.image
-            # img_bgr = cv.cvtColor(img, cv.COLOR_GRAY2RGB)
-            # cv.drawContours(img_bgr, merged_contours, -1, (0, 0, 255), 3)
-            # plt.figure()
-            # plt.imshow(img_bgr)
-            # plt.show()
+            #Test if contours reassemble correctly
+            img = self.image
+            img_bgr = cv.cvtColor(img, cv.COLOR_GRAY2RGB)
+            cv.drawContours(img_bgr, merged_contours[3], -1, (0, 0, 255), 3)
+            plt.figure()
+            plt.imshow(img_bgr)
+            plt.show()
 
             return merged_contours
             
@@ -327,7 +336,7 @@ class ManipImageAdvanced:
         except Exception as e:
             print("Error occured while trying to convert the measurement from mm to px: {e}")
     
-    def fillContours(self, contours, circle_diameter, min_spacing):
+    def placeCircles(self, contours, circle_diameter, min_spacing):
         try:
             #Initialize list of circle centers
             circles_data = []
@@ -341,8 +350,6 @@ class ManipImageAdvanced:
 
             coverage_mask = np.zeros_like(self.image)
             for i,contour in enumerate(contours):
-                # if i in {1,2}:
-                #     continue
                 # Create a blank binary mask for the current contour
                 contour_mask = np.zeros_like(self.image)
                 #Pour faire des cercles sur les contours
@@ -358,7 +365,7 @@ class ManipImageAdvanced:
                         if np.any(coverage_mask[x:x+min_distance, y:y+min_distance]):
                             continue
                         #Le -5 pour creer un effet de superposition
-                        center = (round(x + circle_stamp_radius), round(y + circle_stamp_radius))
+                        center = (round(x), round(y))
                         circles_data.append(center)
 
                         x_center = round(x + circle_stamp_radius)
@@ -378,6 +385,60 @@ class ManipImageAdvanced:
         
         except Exception as e:
             print(f"Error occured trying to fill contours with stamps:{e}")
+    
+    def testPlaceCircles(self, contours, circle_diameter, min_spacing):
+        try:
+            #Initialize list of circle centers
+            circles_data = []
+            gcode_list = []
+
+            #Convert the circle radius in mm to px
+            circle_stamp_radius = self._convertMm2Px([195,175], [600,400], circle_diameter)/2
+
+            #Determine the minimum distance between the circle centers, in px
+            min_distance = round(circle_stamp_radius + min_spacing, None)
+
+            #Go through each contour in the list of all contours reassembled
+            for contour in contours:
+                #Go through all coordinates for a contour
+                for val in contour:
+                    x = val[0,0]
+                    y = val[0,1]
+                    #Can change the value added to x and y if want to cover more ground
+                    if self._isValueAlreadyPresent(x,min_distance,circles_data) or self._isValueAlreadyPresent(y,30,circles_data):
+                        continue
+                    center = (x,y)
+                    circles_data.append(center)
+
+                    x_center = round(x)
+                    y_center = round(y)
+                    circle_shape = 'Cercle'
+                    circle_color = 'Rouge'
+                    gcode_list.append((x_center,y_center,circle_shape,circle_color))
+            
+            self.circles = circles_data
+            self.draw_circles([400,600],'white')
+
+            return gcode_list
+
+        except Exception as e:
+            print(f"Error occured trying to place circles: {e}")
+
+    def _isValueAlreadyPresent(self,value,value_look_around,list):
+        try:
+            for point in list:
+                if point[0] == value:
+                    return True
+                if point[1] == value:
+                    return True
+                i = value_look_around
+                while i > -value_look_around:
+                    if point[0] - i == value:
+                        return True
+                    i = i-1
+            return False
+        except Exception as e:
+            print(f"Error occured while trying to find if the value is already present: {e}")
 
     def draw_circles(self, image_size, background, ):
         output_image = Image.new("RGB", image_size, background)
@@ -391,6 +452,6 @@ class ManipImageAdvanced:
                 width=2
             )
 
-        # plt.figure()
-        # plt.imshow(output_image)
-        # plt.show()
+        plt.figure()
+        plt.imshow(output_image)
+        plt.show()

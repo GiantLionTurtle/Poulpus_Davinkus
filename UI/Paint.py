@@ -349,17 +349,19 @@ class Window(QMainWindow):
     def undo(self):
         if self.shapes:  
             self.shapes.pop()  
+            print("Self shapes: {}".format(self.shapes))
             self.redraw_canvas()
 
     #Redessine la toile de gauche après une modification
     def redraw_canvas(self):
         self.left_canvas.fill_canvas() 
         painter = QPainter(self.left_canvas.canvas)
-        for shape, position, color in self.shapes:
+
+        for positionx, positiony, shape, color in self.shapes:
             self.pen.setColor(QColor(color))
             painter.setPen(self.pen)
             painter.setBrush(QBrush(QColor(color), Qt.BrushStyle.SolidPattern))
-            self.draw_shape(shape, position, painter)
+            self.draw_shape(shape, QPoint(positionx, positiony), painter)
         painter.end()
         self.left_label.setPixmap(self.left_canvas.canvas)
 

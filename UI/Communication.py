@@ -32,7 +32,8 @@ class Communication:
         self.stampsTake_seqs = [self.make_take(stamp1_l, side_wiggle_amp), self.make_take(stamp2_l, side_wiggle_amp), self.make_take(stamp3_l, side_wiggle_amp), self.make_take(stamp4_l, side_wiggle_amp)]
         self.stampsDrop_seqs = [self.make_drop(stamp1_l), self.make_drop(stamp2_l), self.make_drop(stamp3_l), self.make_drop(stamp4_l)]
         
-        self.inkPoolPosition = self.rotate_matrix(self.pageSizeMm[0]/2 - 20, -30, 103)
+        middleinkpoolpos = [self.pageSizeMm[0]/2 - 20, -30, 103]
+        self.inkPoolPosition = self.rotate_seq([off(middleinkpoolpos, [-45, 0, 0]), middleinkpoolpos, off(middleinkpoolpos, [45, 0, 0])])
 
         self.refillValue = 3
         self.host = "poulpus.local"
@@ -87,7 +88,7 @@ class Communication:
         Y = np.sin(angle)*x + np.cos(angle)*y 
 
         return [X,Y,z]
-    def rotate_matrix(self, listthing):
+    def rotate_matrix_l(self, listthing):
         return self.rotate_matrix(listthing[0], listthing[1], listthing[2])
 
     def rotate_seq(self, seq):

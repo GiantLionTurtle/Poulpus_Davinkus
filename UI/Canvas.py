@@ -22,9 +22,9 @@ class Canvas:
         painter = QPainter(self)
         
         # Only redraw the part that needs to be updated
-        painter.drawPixmap(0, 0, self.canvas)  # Draw the existing canvas
+        painter.drawPixmap(0, 0, self.canvas)  # Dessiner la toile
 
-        # Draw the vectorial shapes
+        # Dessiner les formes vectorielle
         self.shape_layer.draw_shapes(painter)
         
         painter.end()

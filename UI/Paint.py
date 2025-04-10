@@ -81,13 +81,14 @@ class Window(QMainWindow):
         option_menu.addAction(save_drawing_button)
 
         # Boutons des différentes couleurs
-        self.color_picker = ColorPicker(self)
-        main_layout.addWidget(self.color_picker.color_container, 0, 1, 1, 2, Qt.AlignmentFlag.AlignCenter & Qt.AlignmentFlag.AlignJustify)
+        # self.color_picker = ColorPicker(self)
+        # main_layout.addWidget(self.color_picker.color_container, 0, 1, 1, 2, Qt.AlignmentFlag.AlignCenter & Qt.AlignmentFlag.AlignJustify)
   
         # Boutons des différentes formes
         self.side_buttons_container = QWidget()
         side_buttons_layout = QVBoxLayout()
-        shapes = ["Carré", "Triangle", "Cercle", "Fleur", "Étoile"]
+        #shapes = ["Carré", "Triangle", "Cercle", "Fleur", "Étoile"]
+        shapes = ["Carré", "Triangle", "Cercle", "Étoile"]
         for shape in shapes:
             btn = QPushButton(shape)
             btn.setFixedSize(80, 30)
@@ -146,10 +147,7 @@ class Window(QMainWindow):
         button_layout.addWidget(test_btn)
 
         #self.manip_image = ManipImage()
-        #self.analyze_button = QPushButton("Appuie pour 5 big BOOMS")
         self.analyze_button = QPushButton("Analyser l'image")
-        #self.analyze_button.setIcon(QIcon("{}/UI/Bouton.png".format(self.workspace_path)))
-        #self.analyze_button.setIconSize(QSize(150, 40))
         self.analyze_button.clicked.connect(self.test_analyze)
         self.analyze_button.setFixedSize(150, 40)
         main_layout.addWidget(self.analyze_button, 0, 1, 1, 1, Qt.AlignmentFlag.AlignHCenter)
@@ -174,18 +172,18 @@ class Window(QMainWindow):
         self.drawing_selector = QComboBox()
         self.drawing_selector.setFixedSize(200, 50)
         self.drawing_selector.addItems(["Choisissez un dessin","Foret", "Chat", "Voiture"])
-        main_layout.addWidget(self.drawing_selector, 0, 3, 1, 1, Qt.AlignmentFlag.AlignHCenter)
+        main_layout.addWidget(self.drawing_selector, 0, 2, 1, 1, Qt.AlignmentFlag.AlignHCenter)
         self.drawing_selector.currentTextChanged.connect(self.drawing_change)
 
-        # Add this with your other UI elements
+        # Label pour afficher l'état de la connection
         self.connection_status = QLabel()
-        self.update_connection_status(False)  # Initialize as disconnected
+        self.update_connection_status(False) 
         status_layout = QHBoxLayout()
         status_layout.addWidget(QLabel("Connection au robot:"))
         status_layout.addWidget(self.connection_status)
         status_container = QWidget()
         status_container.setLayout(status_layout)
-        main_layout.addWidget(status_container, 2, 5)  # Adjust position as needed
+        main_layout.addWidget(status_container, 2, 5)  
 
         self.communication = Communication(self)
 
@@ -306,7 +304,7 @@ class Window(QMainWindow):
         if self.current_mode == "Drawing":
             self.current_mode = "Image"
             self.side_buttons_container.setVisible(False)
-            self.color_picker.color_container.setVisible(False)
+            #self.color_picker.color_container.setVisible(False)
             self.undo_button.setVisible(False)
             self.export_button.setVisible(False)
             self.image_selector.setVisible(True)
@@ -319,7 +317,7 @@ class Window(QMainWindow):
         else:
             self.current_mode = "Drawing"
             self.side_buttons_container.setVisible(True)
-            self.color_picker.color_container.setVisible(True)
+            #self.color_picker.color_container.setVisible(True)
             self.undo_button.setVisible(True)
             self.export_button.setVisible(True)
             self.image_selector.setVisible(False)
@@ -330,6 +328,12 @@ class Window(QMainWindow):
     #Ajuste la bonne forme à utiliser en fonction du choix de l'utilisateur
     def set_shape(self, shape):
         self.current_shape = shape
+        if shape == "Triangle" or "Carré":
+            self.current_color = QColor(Qt.GlobalColor.black)
+        if shape == "Étoile":
+            self.current_color = QColor(Qt.GlobalColor.yellow)
+        if shape == "Cercle":
+            self.current_color = QColor(Qt.GlobalColor.red)
 
     #Efface l'entierté des formes/images sur la toile de gauche
     def clear_canvas(self):
@@ -368,15 +372,14 @@ class Window(QMainWindow):
     def mousePressEvent(self, event):
         if self.current_mode == "Drawing":
             abs_position = event.pos()
-            # print(abs_position)
             position = self.left_label.mapFrom(self, event.pos())
-            print(position)
             painter = QPainter(self.left_canvas.canvas)
             self.pen.setColor(self.current_color)
             painter.setPen(self.pen)
             painter.setBrush(QBrush(self.current_color, Qt.BrushStyle.SolidPattern))
 
-            if self.current_shape in ["Cercle", "Carré", "Triangle", "Étoile", "Fleur"]:
+            #if self.current_shape in ["Cercle", "Carré", "Triangle", "Étoile", "Fleur"]:
+            if self.current_shape in ["Cercle", "Carré", "Triangle", "Étoile"]:
                 x = position.x()
                 y = position.y()
                 self.shapes.append((x, y, self.current_shape, self.current_color.name()))

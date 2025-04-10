@@ -225,6 +225,7 @@ class Window(QMainWindow):
         new_contours = cv_img.contourFiltering(contours)
         final_contours = cv_img.reassembleContours(new_contours)
         coordinates = cv_img.fillContours(final_contours, 20.0, 0.0)
+        self.shapes = coordinates
         #self.communication.gcode_logic(coordinates)
         
         print("Analysis completed, outputs saved.")
@@ -307,7 +308,7 @@ class Window(QMainWindow):
             self.side_buttons_container.setVisible(False)
             self.color_picker.color_container.setVisible(False)
             self.undo_button.setVisible(False)
-            #self.export_button.setVisible(False)
+            self.export_button.setVisible(False)
             self.image_selector.setVisible(True)
             self.analyze_button.setVisible(True)
             self.image_path = None
@@ -320,7 +321,7 @@ class Window(QMainWindow):
             self.side_buttons_container.setVisible(True)
             self.color_picker.color_container.setVisible(True)
             self.undo_button.setVisible(True)
-            #self.export_button.setVisible(True)
+            self.export_button.setVisible(True)
             self.image_selector.setVisible(False)
             self.analyze_button.setVisible(False)
             self.image_path = None
@@ -441,7 +442,7 @@ class Window(QMainWindow):
             color = QColor(color_name)
             self.draw_progression(shape, x, y, color)
             QApplication.processEvents()  # Update UI
-            time.sleep(1.5)
+            time.sleep(1)
 
     def update_connection_status(self, connected: bool):
         color = "green" if connected else "red"

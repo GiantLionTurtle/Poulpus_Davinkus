@@ -108,9 +108,9 @@ class ManipImageAdvanced:
                 mask_white = cv.inRange(image_hsv, lower_bound, upper_bound)
                 masked_image = cv.bitwise_not(mask_white)
 
-            # plt.figure()
-            # plt.imshow(masked_image)
-            # plt.show()
+            plt.figure()
+            plt.imshow(masked_image)
+            plt.show()
 
             self.image = masked_image
         except Exception as e:
@@ -391,6 +391,6 @@ class ManipImageAdvanced:
                 width=2
             )
 
-        plt.figure()
-        plt.imshow(output_image)
-        plt.show()
+        # plt.figure()
+        # plt.imshow(output_image)
+        # plt.show()

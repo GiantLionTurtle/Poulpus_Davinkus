@@ -38,12 +38,12 @@ class Window(QMainWindow):
 
         #Paths des différentes images disponibles dans la banque
         self.image_paths = {
-    "Shrek": "{}/Images/shrek".format(self.workspace_path),
+    "Shrek": "{}/Images/shrek.png".format(self.workspace_path),
     "Coeur": "{}/Images/heart.png".format(self.workspace_path),
-    "Canadiens": "{}/Images/canadien_logo".format(self.workspace_path),
-    "Capybara": "{}/Images/capybara".format(self.workspace_path),
-    "Poulpe": "{}/Images/Poulpus_Davinkus".format(self.workspace_path),
-    "Pikachu": "{}/Images/fat_pikachu".format(self.workspace_path),
+    "Canadiens": "{}/Images/canadien_logo.png".format(self.workspace_path),
+    "Capybara": "{}/Images/capybara.png".format(self.workspace_path),
+    "Poulpe": "{}/Images/Poulpus_Davinkus.jpg".format(self.workspace_path),
+    "Pikachu": "{}/Images/fat_pikachu.png".format(self.workspace_path),
 }
         #path des différents dessins disponibles dans la banque
         self.drawing_paths = {

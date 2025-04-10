@@ -225,6 +225,7 @@ class Window(QMainWindow):
         new_contours = cv_img.contourFiltering(contours)
         final_contours = cv_img.reassembleContours(new_contours)
         coordinates = cv_img.fillContours(final_contours, 20.0, 0.0)
+        self.shapes = coordinates
         #self.communication.gcode_logic(coordinates)
         
         print("Analysis completed, outputs saved.")
@@ -307,7 +308,7 @@ class Window(QMainWindow):
             self.side_buttons_container.setVisible(False)
             self.color_picker.color_container.setVisible(False)
             self.undo_button.setVisible(False)
-            #self.export_button.setVisible(False)
+            self.export_button.setVisible(False)
             self.image_selector.setVisible(True)
             self.analyze_button.setVisible(True)
             self.image_path = None
@@ -320,7 +321,7 @@ class Window(QMainWindow):
             self.side_buttons_container.setVisible(True)
             self.color_picker.color_container.setVisible(True)
             self.undo_button.setVisible(True)
-            #self.export_button.setVisible(True)
+            self.export_button.setVisible(True)
             self.image_selector.setVisible(False)
             self.analyze_button.setVisible(False)
             self.image_path = None
@@ -385,8 +386,23 @@ class Window(QMainWindow):
             self.left_label.setPixmap(self.left_canvas.canvas)
 
 
+    def _convertMm2Px(self,page_size,image_size,measure_to_convert):
+        try:
+            page_height, page_width = page_size
+            image_height, image_width = image_size
+            x_conversion = image_width/page_width
+            y_conversion = image_height/page_height
+            #Want to take the smallest between the two so that at worst some overlapping, but not outside
+            #the range of the sheet on the robot or creating a weird shape
+            if x_conversion > y_conversion:
+                return y_conversion*measure_to_convert
+            return x_conversion*measure_to_convert
+        except Exception as e:
+            print("Error occured while trying to convert the measurement from mm to px: {e}")
+
+
     def draw_shape(self, shape, position, painter):
-        shape_size = 25
+        shape_size = round(self._convertMm2Px([195,175], [445,400], 20))
         if shape == "Cercle":
             draw_circle(position, painter, shape_size)
         elif shape == "Carré":
@@ -426,7 +442,7 @@ class Window(QMainWindow):
             color = QColor(color_name)
             self.draw_progression(shape, x, y, color)
             QApplication.processEvents()  # Update UI
-            time.sleep(1.5)
+            time.sleep(1)
 
     def update_connection_status(self, connected: bool):
         color = "green" if connected else "red"

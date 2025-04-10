@@ -87,7 +87,9 @@ class Communication:
         Y = np.sin(angle)*x + np.cos(angle)*y 
 
         return [X,Y,z]
-    
+    def rotate_matrix(self, listthing):
+        return self.rotate_matrix(listthing[0], listthing[1], listthing[2])
+
     def rotate_seq(self, seq):
         out = []
         for elem in seq:
@@ -146,12 +148,20 @@ class Communication:
         #Set slower flow rate to avoid big Splash
         normalFr = self.flowRate
         
+        pool_index = 0
+        if color == "#ff0000": # Red
+            pool_index = 0
+        elif color == "#ffff00": # Blue
+            pool_index = 1
+        elif color == "#00ffff": # Yellow
+            pool_index = 2
+        else: # Black
+            pool_index = 3
 
-        self.position_to_gcode(self.inkPoolPosition[0],self.inkPoolPosition[1],self.inkPoolPosition[2] + 60)
-        
+        self.position_to_gcode(self.inkPoolPosition[pool_index][0], self.inkPoolPosition[pool_index][1], self.inkPoolPosition[pool_index][2] + 60)
         self.flowRate = normalFr/2
-        self.position_to_gcode(self.inkPoolPosition[0],self.inkPoolPosition[1],self.inkPoolPosition[2])
-        self.position_to_gcode(self.inkPoolPosition[0],self.inkPoolPosition[1],self.inkPoolPosition[2] + 60)
+        self.position_to_gcode(self.inkPoolPosition[pool_index][0], self.inkPoolPosition[pool_index][1], self.inkPoolPosition[pool_index][2])
+        self.position_to_gcode(self.inkPoolPosition[pool_index][0], self.inkPoolPosition[pool_index][1], self.inkPoolPosition[pool_index][2] + 60)
 
         #Set normal flow rate back
         self.flowRate = normalFr

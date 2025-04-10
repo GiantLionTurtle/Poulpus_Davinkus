@@ -38,11 +38,12 @@ class Window(QMainWindow):
 
         #Paths des différentes images disponibles dans la banque
         self.image_paths = {
-    "Shrek": "{}/Images/shrek".format(self.workspace_path),
+    "Shrek": "{}/Images/shrek.png".format(self.workspace_path),
     "Coeur": "{}/Images/heart.png".format(self.workspace_path),
-    "Canadiens": "{}/Images/canadien_logo".format(self.workspace_path),
-    "Capybara": "{}/Images/capybara".format(self.workspace_path),
-    "Poulpe": "{}/Images/Poulpus_Davinkus".format(self.workspace_path),
+    "Canadiens": "{}/Images/canadien_logo.png".format(self.workspace_path),
+    "Capybara": "{}/Images/capybara.png".format(self.workspace_path),
+    "Poulpe": "{}/Images/Poulpus_Davinkus.jpg".format(self.workspace_path),
+    "Pikachu": "{}/Images/fat_pikachu.png".format(self.workspace_path),
 }
         #path des différents dessins disponibles dans la banque
         self.drawing_paths = {
@@ -98,13 +99,13 @@ class Window(QMainWindow):
         #Toile de gauche
         self.left_canvas = Canvas(self)
         self.left_label = self.left_canvas.canevas_label
-        self.left_label.setFixedSize(400, 600)
+        self.left_label.setFixedSize(400, 445)
         main_layout.addWidget(self.left_label, 1, 1, 1, 2, Qt.AlignmentFlag.AlignCenter)
 
         #Toile de droite
         self.right_canvas = Canvas(self)
         self.right_label = self.right_canvas.canevas_label
-        self.right_label.setFixedSize(400, 600)
+        self.right_label.setFixedSize(400, 445)
         main_layout.addWidget(self.right_label, 1, 4, 1, 2, Qt.AlignmentFlag.AlignCenter)
 
         # coutainer du bouton en dessous de la toile de gauche
@@ -146,9 +147,9 @@ class Window(QMainWindow):
 
         #self.manip_image = ManipImage()
         #self.analyze_button = QPushButton("Appuie pour 5 big BOOMS")
-        self.analyze_button = QPushButton()
-        self.analyze_button.setIcon(QIcon("{}/UI/Bouton.png".format(self.workspace_path)))
-        self.analyze_button.setIconSize(QSize(150, 40))
+        self.analyze_button = QPushButton("Analyser l'image")
+        #self.analyze_button.setIcon(QIcon("{}/UI/Bouton.png".format(self.workspace_path)))
+        #self.analyze_button.setIconSize(QSize(150, 40))
         self.analyze_button.clicked.connect(self.test_analyze)
         self.analyze_button.setFixedSize(150, 40)
         main_layout.addWidget(self.analyze_button, 0, 1, 1, 1, Qt.AlignmentFlag.AlignHCenter)
@@ -163,6 +164,7 @@ class Window(QMainWindow):
         self.image_selector.addItem(QIcon(self.image_paths.get("Canadiens")), "Canadiens")
         self.image_selector.addItem(QIcon(self.image_paths.get("Capybara")), "Capybara")
         self.image_selector.addItem(QIcon(self.image_paths.get("Poulpe")), "Poulpe")
+        self.image_selector.addItem(QIcon(self.image_paths.get("Pikachu")), "Pikachu")
         main_layout.addWidget(self.image_selector, 0, 0, 1, 1, Qt.AlignmentFlag.AlignHCenter)
         self.image_selector.hide()
         self.image_selector.currentTextChanged.connect(self.image_change)
@@ -179,11 +181,11 @@ class Window(QMainWindow):
         self.connection_status = QLabel()
         self.update_connection_status(False)  # Initialize as disconnected
         status_layout = QHBoxLayout()
-        status_layout.addWidget(QLabel("Robot Status:"))
+        status_layout.addWidget(QLabel("Connection au robot:"))
         status_layout.addWidget(self.connection_status)
         status_container = QWidget()
         status_container.setLayout(status_layout)
-        main_layout.addWidget(status_container, 3, 3)  # Adjust position as needed
+        main_layout.addWidget(status_container, 2, 5)  # Adjust position as needed
 
         self.communication = Communication(self)
 
@@ -223,7 +225,7 @@ class Window(QMainWindow):
         new_contours = cv_img.contourFiltering(contours)
         final_contours = cv_img.reassembleContours(new_contours)
         coordinates = cv_img.fillContours(final_contours, 20.0, 0.0)
-        self.communication.gcode_logic(coordinates)
+        #self.communication.gcode_logic(coordinates)
         
         print("Analysis completed, outputs saved.")
 
@@ -239,10 +241,7 @@ class Window(QMainWindow):
             return
 
         with open(file_path, "w") as f:
-            for shape, position, color in self.shapes:
-                x = position.x()
-                y = position.y()
-                #color_str = color.name()  
+            for x, y, shape, color in self.shapes:
                 f.write(f"SHAPE {shape} X{x} Y{y} COLOR {color}\n")
 
         print(f"Drawing saved to '{file_path}'")
@@ -261,9 +260,8 @@ class Window(QMainWindow):
                 match = re.search(r'SHAPE (\w+) X(-?\d+) Y(-?\d+) COLOR (#\w+)', line)
                 if match:
                     shape, x, y, color = match.groups()
-                    position = QPoint(int(x), int(y))
-                    qcolor = QColor(color) 
-                    self.shapes.append((shape, position, qcolor))
+                    # Store as (x, y, shape, color) to match manual drawing format
+                    self.shapes.append((int(x), int(y), shape, color))
 
         self.redraw_canvas()
 
@@ -356,19 +354,22 @@ class Window(QMainWindow):
     def redraw_canvas(self):
         self.left_canvas.fill_canvas() 
         painter = QPainter(self.left_canvas.canvas)
-
-        for positionx, positiony, shape, color in self.shapes:
+        for x, y, shape, color in self.shapes:
             self.pen.setColor(QColor(color))
             painter.setPen(self.pen)
             painter.setBrush(QBrush(QColor(color), Qt.BrushStyle.SolidPattern))
-            self.draw_shape(shape, QPoint(positionx, positiony), painter)
+            position = QPoint(x, y)
+            self.draw_shape(shape, position, painter)
         painter.end()
         self.left_label.setPixmap(self.left_canvas.canvas)
 
     #Ajoute une forme lorsque l'utilisateur appuis dans une zone de la toile de gauche uniquement
     def mousePressEvent(self, event):
         if self.current_mode == "Drawing":
+            abs_position = event.pos()
+            print(abs_position)
             position = self.left_label.mapFrom(self, event.pos())
+            print(position)
             painter = QPainter(self.left_canvas.canvas)
             self.pen.setColor(self.current_color)
             painter.setPen(self.pen)
@@ -377,31 +378,34 @@ class Window(QMainWindow):
             if self.current_shape in ["Cercle", "Carré", "Triangle", "Étoile", "Fleur"]:
                 x = position.x()
                 y = position.y()
-                self.shapes.append((x, y, self.current_shape,self.current_color.name()))
+                self.shapes.append((x, y, self.current_shape, self.current_color.name()))
                 self.draw_shape(self.current_shape, position, painter)
 
             painter.end()
             self.left_label.setPixmap(self.left_canvas.canvas)
 
+
     def draw_shape(self, shape, position, painter):
+        shape_size = 25
         if shape == "Cercle":
-            draw_circle(position, painter, 50)
+            draw_circle(position, painter, shape_size)
         elif shape == "Carré":
-            draw_square(position, painter, 50)
+            draw_square(position, painter, shape_size)
         elif shape == "Triangle":
-            draw_triangle(position, painter, 50)
+            draw_triangle(position, painter, shape_size)
         elif shape == "Étoile":
-            draw_star(position, painter, 50)
+            draw_star(position, painter, shape_size)
         elif shape == "Fleur":
             draw_splatter(position, painter)
 
 
-    def draw_progression(self, shape: str, position: QPoint, color: QColor):
+    def draw_progression(self, shape: str, x: int, y: int, color: QColor):
         painter = QPainter(self.right_canvas.canvas)
         try:
             self.pen.setColor(color)
             painter.setPen(self.pen)
             painter.setBrush(QBrush(color, Qt.BrushStyle.SolidPattern))
+            position = QPoint(x, y)
             self.draw_shape(shape, position, painter)
         finally:
             painter.end()
@@ -412,16 +416,17 @@ class Window(QMainWindow):
 
     def test_progression(self):
         if not self.shapes:
-            print("No shapes to draw ")
+            print("No shapes to draw")
             return
         
         self.right_canvas.fill_canvas()
         self.right_label.setPixmap(self.right_canvas.canvas)
         
-        for shape, pos, color in self.shapes:
-            self.draw_progression(shape, pos, color)
-            QApplication.processEvents()  # Mise èa jour du UI
-            time.sleep(0.5)
+        for x, y, shape, color_name in self.shapes:
+            color = QColor(color_name)
+            self.draw_progression(shape, x, y, color)
+            QApplication.processEvents()  # Update UI
+            time.sleep(1.5)
 
     def update_connection_status(self, connected: bool):
         color = "green" if connected else "red"

@@ -17,14 +17,14 @@ class ManipImageAdvanced:
         #Obtained as arguments when instancing the class
         self.pixmap = pixmap
         self.file_path = file_path
-        #To draw circles for tests purposes
+        #To draw circles, for tests purposes only, remove once tests have been done
         self.circles = []
 
-    @dataclass
-    class AnalysisData:
-        circles: list
-        circles_shape: list
-        circles_color: list
+    # @dataclass
+    # class AnalysisData:
+    #     circles: list
+    #     circles_shape: list
+    #     circles_color: list
 
     def _convertPixmapToCvImage(self, pixmap:QPixmap) -> np.ndarray:
         try:
@@ -84,16 +84,7 @@ class ManipImageAdvanced:
                 upper_bound = np.array([180, 0, 255])
                 mask_black = cv.inRange(image_hsv, lower_bound, upper_bound)
                 masked_image = cv.bitwise_not(mask_black)
-            elif(self.getImageName() == "nemo.png"):
-                lower_bound = np.array([0, 0, 0])
-                upper_bound = np.array([180, 0, 255])
-                lower_bound2 = np.array([0, 0, 0])
-                upper_bound2 = np.array([180, 0, 55])
-                mask_white = cv.inRange(image_hsv, lower_bound, upper_bound)
-                mask_white2 = cv.inRange(image_hsv, lower_bound2, upper_bound2)
-                masked_image = cv.bitwise_not(mask_white2)
             elif(self.getImageName() == "canadien_logo.png"):
-                #Make sure when we apply the stamps we dont put a stamp for the little circle
                 lower_bound = np.array([0, 0, 0])
                 upper_bound = np.array([180, 0, 255])
                 mask_white = cv.inRange(image_hsv, lower_bound, upper_bound)
@@ -117,9 +108,9 @@ class ManipImageAdvanced:
                 mask_white = cv.inRange(image_hsv, lower_bound, upper_bound)
                 masked_image = cv.bitwise_not(mask_white)
 
-            # plt.figure()
-            # plt.imshow(masked_image)
-            # plt.show()
+            plt.figure()
+            plt.imshow(masked_image)
+            plt.show()
 
             self.image = masked_image
         except Exception as e:
@@ -181,13 +172,6 @@ class ManipImageAdvanced:
                 for contour in contours_list:
                     print(f"Contour area: {cv.contourArea(contour)}")
                     print(f"Contour length: {len(contour)}")
-            #Skipped pour l'instant
-            elif(self.getImageName() == "nemo.png"):
-                for contour in contours:
-                    print(f"Contour area: {cv.contourArea(contour)}")
-                    print(f"Contour length: {len(contour)}")
-                contours_list = [contour for contour in contours if (len(contour) >= 8)]
-                print(f"Number of contours after filtering: {len(contours_list)}")
             elif(self.getImageName() == "canadien_logo.png"):
                 for contour in contours:
                     print(f"Contour area: {cv.contourArea(contour)}")
@@ -398,7 +382,7 @@ class ManipImageAdvanced:
     def draw_circles(self, image_size, background, ):
         output_image = Image.new("RGB", image_size, background)
         draw = ImageDraw.Draw(output_image)
-        circle_radius = self._convertMm2Px([279,216], [600,400], 20.0)/2
+        circle_radius = self._convertMm2Px([195,175], [600,400], 20.0)/2
 
         for x, y in self.circles:
             draw.ellipse(
@@ -407,6 +391,6 @@ class ManipImageAdvanced:
                 width=2
             )
 
-        plt.figure()
-        plt.imshow(output_image)
-        plt.show()
+        # plt.figure()
+        # plt.imshow(output_image)
+        # plt.show()

@@ -8,11 +8,11 @@ from PyQt6.QtGui import QPainter, QPen, QColor
 class Canvas:
     def __init__(self, window):
         self.window = window
-        self.canvas = QPixmap(400, 600)
+        self.canvas = QPixmap(400, 445)
         self.canvas.fill(QColor("white"))
         self.canevas_label = QLabel()
         self.canevas_label.setPixmap(self.canvas)
-        self.canevas_label.setFixedSize(400, 600)
+        self.canevas_label.setFixedSize(400, 445)
 
     def fill_canvas(self):
         self.canvas.fill(QColor("white"))
@@ -30,9 +30,5 @@ class Canvas:
         painter.end()
     
     def update_canvas(self, rect):
-        """
-        Update only the specific area where the shape was drawn.
-        This method allows selective redrawing by passing the QRect to update.
-        """
         self.update(rect)
 

@@ -384,8 +384,23 @@ class Window(QMainWindow):
             self.left_label.setPixmap(self.left_canvas.canvas)
 
 
+    def _convertMm2Px(self,page_size,image_size,measure_to_convert):
+        try:
+            page_height, page_width = page_size
+            image_height, image_width = image_size
+            x_conversion = image_width/page_width
+            y_conversion = image_height/page_height
+            #Want to take the smallest between the two so that at worst some overlapping, but not outside
+            #the range of the sheet on the robot or creating a weird shape
+            if x_conversion > y_conversion:
+                return y_conversion*measure_to_convert
+            return x_conversion*measure_to_convert
+        except Exception as e:
+            print("Error occured while trying to convert the measurement from mm to px: {e}")
+
+
     def draw_shape(self, shape, position, painter):
-        shape_size = 25
+        shape_size = round(self._convertMm2Px([195,175], [445,400], 20))
         if shape == "Cercle":
             draw_circle(position, painter, shape_size)
         elif shape == "Carré":

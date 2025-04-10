@@ -347,6 +347,7 @@ class Window(QMainWindow):
     def undo(self):
         if self.shapes:  
             self.shapes.pop()  
+            print("Self shapes: {}".format(self.shapes))
             self.redraw_canvas()
 
     #Redessine la toile de gauche après une modification

@@ -13,40 +13,32 @@ class Communication:
     def __init__(self, window = None):
 
         self.window = window
-        self.hop = 30 #hop height constant in millimeter
-        self.flowRate = 2000 
-        self.pageSizeMm = [210, 297]
+        self.hop = 40 #hop height constant in millimeter
+        self.flowRate = 2500 
+        self.pageSizeMm = [175, 195]
         self.pageSizePix = [400, 600] # NEEDS TO BE CHANGED
-        self.pageHeight = 60  #height in the Z axis to stamp
+        self.pageHeight = 75  #height in the Z axis to stamp
         self.gcode = []
         self.currentColor = None
         self.currentShape = None
         self.homeNotHome = [0,0,120]
 
-        centerStamp_l = [-47, self.pageSizeMm[1]/2 + 5, 78]
-        leftStamp_l = [-47, self.pageSizeMm[1]/2 + 41, 78]
-        rightStamp_l = [-47, self.pageSizeMm[1]/2  - 32, 78]
+        stamp1_l = [-24, self.pageSizeMm[1]/2 + 100, 112]
+        stamp2_l = [-24, self.pageSizeMm[1]/2 + 44, 112]
+        stamp3_l = [-24, self.pageSizeMm[1]/2  - 10, 112]
+        stamp4_l = [-24, self.pageSizeMm[1]/2 - 87, 112]
 
-        side_wiggle_amp = 15;
-        self.centerTake_seq = self.make_take(centerStamp_l, side_wiggle_amp)
-        self.centerDrop_seq = self.make_drop(centerStamp_l)
+        side_wiggle_amp = 5
+        self.stampsTake_seqs = [self.make_take(stamp1_l, side_wiggle_amp), self.make_take(stamp2_l, side_wiggle_amp), self.make_take(stamp3_l, side_wiggle_amp), self.make_take(stamp4_l, side_wiggle_amp)]
+        self.stampsDrop_seqs = [self.make_drop(stamp1_l), self.make_drop(stamp2_l), self.make_drop(stamp3_l), self.make_drop(stamp4_l)]
+        
+        self.inkPoolPosition = self.rotate_matrix(self.pageSizeMm[0]/2, 15, 98)
 
-        self.leftTake_seq = self.make_take(leftStamp_l, side_wiggle_amp)
-        self.leftDrop_seq = self.make_drop(leftStamp_l)
-
-        self.rightTake_seq = self.make_take(rightStamp_l, side_wiggle_amp)
-        self.rightDrop_seq = self.make_drop(rightStamp_l)
-
-        print(self.centerTake_seq)
-        self.inkPoolPosition = [30,45,40] #Arbitrary position (needs to be tested)
-        self.refillValue = 25
+        self.refillValue = 3
         self.host = "poulpus.local"
         self.username = "poulpus"
         self.password = "davinkus"
-
-        self.client = paramiko.client.SSHClient()
-        self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
+        
         self.openSSH()
 
     def __del__(self):
@@ -55,16 +47,21 @@ class Communication:
         
 
     def make_take(self, init, side_wiggle):
-        return self.rotate_seq([off(init, [77, 0, 7]), init, off(init, [0, side_wiggle, 8]), off(init, [0, -side_wiggle, 8]), off(init, [0, 0, 8]), off(init, [77, 0, 7])])
+        return self.rotate_seq([off(init, [80, 0, 7]), init, off(init, [0, side_wiggle, 8]), off(init, [0, -side_wiggle, 8]), off(init, [0, 0, 8]), off(init, [80, 0, 7])])
     def make_drop(self, init):
-        return  self.rotate_seq([off(init, [77, 0, 7]), init, off(init, [0, 0, 40])])
+        return  self.rotate_seq([off(init, [80, 0, 7]), init, off(init, [0, 0, 20]), off(init, [80, 0, 20])])
     
     def openSSH(self):
         try:
-
-            self.client.connect(self.host,22, username=self.username, password=self.password)
+            self.client = paramiko.client.SSHClient()
+            self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            self.client.connect(self.host,22, username=self.username, password=self.password, timeout=15, allow_agent=False)
             if self.window:
                 self.window.update_connection_status(True)
+            
+            self.client.get_transport().set_keepalive(15)
+
+
         except Exception as e:
             print("Incapable d'etablir la connection ssh")
             if self.window:
@@ -120,23 +117,23 @@ class Communication:
         #Sequences needs to be tested to find out the correct offsets and the correct Stamp positions
         #Put the stamp in the rack
         if self.currentShape == "Cercle":
-            self.send_seq(self.leftDrop_seq)
+            self.send_seq(self.stampsDrop_seqs[0])
             
         if self.currentShape == "Carré":
-            self.send_seq(self.centerDrop_seq)
+            self.send_seq(self.stampsDrop_seqs[1])
 
         if self.currentShape == "Triangle":
-            self.send_seq(self.rightDrop_seq)
+            self.send_seq(self.stampsDrop_seqs[2])
  
         #Take the next stamp
         if shape == "Cercle":
-            self.send_seq(self.leftTake_seq)
+            self.send_seq(self.stampsTake_seqs[0])
 
         if shape == "Carré":
-            self.send_seq(self.centerTake_seq)
+            self.send_seq(self.stampsTake_seqs[1])
 
         if shape == "Triangle":
-            self.send_seq(self.rightTake_seq)
+            self.send_seq(self.stampsTake_seqs[2])
 
         self.currentColor = color
         self.currentShape = shape
@@ -148,11 +145,13 @@ class Communication:
     def ink_stamp(self,color):
         #Set slower flow rate to avoid big Splash
         normalFr = self.flowRate
-        self.flowRate = normalFr/2
+        
 
-        self.position_to_gcode(self.inkPoolPosition[0],self.inkPoolPosition[1],self.inkPoolPosition[2] + 50)
+        self.position_to_gcode(self.inkPoolPosition[0],self.inkPoolPosition[1],self.inkPoolPosition[2] + 60)
+        
+        self.flowRate = normalFr/2
         self.position_to_gcode(self.inkPoolPosition[0],self.inkPoolPosition[1],self.inkPoolPosition[2])
-        self.position_to_gcode(self.inkPoolPosition[0],self.inkPoolPosition[1],self.inkPoolPosition[2] + 50)
+        self.position_to_gcode(self.inkPoolPosition[0],self.inkPoolPosition[1],self.inkPoolPosition[2] + 60)
 
         #Set normal flow rate back
         self.flowRate = normalFr
@@ -167,6 +166,7 @@ class Communication:
         
         self.gcode = [] 
         print("Sending: '{}'".format(msg))
+
         stdin, stdout, stderr = self.client.exec_command("echo '{}' >> /tmp/printer".format(msg))
         
 
@@ -175,7 +175,6 @@ class Communication:
     def gcode_logic(self, positions): #positions is one or n positions
         
         self.go_home()
-        self.position_to_gcode(self.homeNotHome[0], self.homeNotHome[1], self.homeNotHome[2])
         stamp_counter = 0
 
         for x,y,shape,color  in positions:
@@ -188,7 +187,7 @@ class Communication:
             #Checks if Stamp needs to be changed
             if shape != self.currentShape or color != self.currentColor:
                 self.change_stamp(color, shape)
-                #self.ink_stamp(shape)
+                self.ink_stamp(shape)
                 stamp_counter = 0
                 
             #Checks if ink needs to be applied on the stamp

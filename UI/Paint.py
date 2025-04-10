@@ -210,8 +210,6 @@ class Window(QMainWindow):
 
     #Lance l'analyse d'image sur l'image présente sur la toile de gauche
     def test_analyze(self):
-        output_path = os.path.abspath("{}/output.png".format(self.workspace_path))
-        output_path2 = os.path.abspath("{}/outputgcode.txt".format(self.workspace_path))
         
         # Accède à la pixmap de uploader
         pixmap = self.uploader.get_pixmap()
@@ -225,8 +223,7 @@ class Window(QMainWindow):
         new_contours = cv_img.contourFiltering(contours)
         final_contours = cv_img.reassembleContours(new_contours)
         coordinates = cv_img.fillContours(final_contours, 20.0, 0.0)
-        #cv_img.draw_circles(output_path, (400, 600), "white")
-        #cv_img.convert_gcode(output_path2, (216, 279), (400, 600))
+        self.communication.gcode_logic(coordinates)
         
         print("Analysis completed, outputs saved.")
 

@@ -9,6 +9,7 @@ from matplotlib import pyplot as plt
 import os
 from typing import List, Dict
 import itertools
+import array as arr
 
 class ManipImageAdvanced:
     def __init__(self, pixmap=None, file_path=None):
@@ -346,11 +347,10 @@ class ManipImageAdvanced:
         try:
             #Initialize list of circle centers
             circles_data = []
-            circles_color_list = []
-            circles_shape_list = []
+            gcode_list = []
 
             #Convert the circle radius in mm to px
-            circle_stamp_radius = self._convertMm2Px([279,216], [600,400], circle_diameter)/2
+            circle_stamp_radius = self._convertMm2Px([195,175], [600,400], circle_diameter)/2
 
             #Determine the minimum distance between the circle centers, in px
             min_distance = round(circle_stamp_radius + min_spacing, None)
@@ -376,17 +376,21 @@ class ManipImageAdvanced:
                         #Le -5 pour creer un effet de superposition
                         center = (round(x + circle_stamp_radius), round(y + circle_stamp_radius))
                         circles_data.append(center)
+
+                        x_center = round(x + circle_stamp_radius)
+                        y_center = round(y + circle_stamp_radius)
                         circle_shape = 'Cercle'
-                        circles_shape_list.append(circle_shape)
                         circle_color = 'Rouge'
-                        circles_color_list.append(circle_color)
+                        gcode_list.append((x_center,y_center,circle_shape,circle_color))
+                        
                         cv.circle(coverage_mask, center, round(circle_stamp_radius), 255, cv.FILLED)
 
             self.circles = circles_data
 
             self.draw_circles([400,600],'white')
 
-            return self.AnalysisData(circles=circles_data,circles_shape=circles_shape_list, circles_color=circles_color_list)
+            #return self.AnalysisData(circles=circles_data,circles_shape=circles_shape_list, circles_color=circles_color_list)
+            return gcode_list
         
         except Exception as e:
             print(f"Error occured trying to fill contours with stamps:{e}")

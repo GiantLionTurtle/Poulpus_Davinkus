@@ -38,11 +38,12 @@ class Window(QMainWindow):
 
         #Paths des différentes images disponibles dans la banque
         self.image_paths = {
-    "Shrek": "{}/Images/shrek".format(self.workspace_path),
+    "Shrek": "{}/Images/shrek.png".format(self.workspace_path),
     "Coeur": "{}/Images/heart.png".format(self.workspace_path),
-    "Canadiens": "{}/Images/canadien_logo".format(self.workspace_path),
-    "Capybara": "{}/Images/capybara".format(self.workspace_path),
-    "Poulpe": "{}/Images/Poulpus_Davinkus".format(self.workspace_path),
+    "Canadiens": "{}/Images/canadien_logo.png".format(self.workspace_path),
+    "Capybara": "{}/Images/capybara.png".format(self.workspace_path),
+    "Poulpe": "{}/Images/Poulpus_Davinkus.jpg".format(self.workspace_path),
+    "Pikachu": "{}/Images/fat_pikachu.png".format(self.workspace_path),
 }
         #path des différents dessins disponibles dans la banque
         self.drawing_paths = {
@@ -163,6 +164,7 @@ class Window(QMainWindow):
         self.image_selector.addItem(QIcon(self.image_paths.get("Canadiens")), "Canadiens")
         self.image_selector.addItem(QIcon(self.image_paths.get("Capybara")), "Capybara")
         self.image_selector.addItem(QIcon(self.image_paths.get("Poulpe")), "Poulpe")
+        self.image_selector.addItem(QIcon(self.image_paths.get("Pikachu")), "Pikachu")
         main_layout.addWidget(self.image_selector, 0, 0, 1, 1, Qt.AlignmentFlag.AlignHCenter)
         self.image_selector.hide()
         self.image_selector.currentTextChanged.connect(self.image_change)
@@ -210,19 +212,20 @@ class Window(QMainWindow):
 
     #Lance l'analyse d'image sur l'image présente sur la toile de gauche
     def test_analyze(self):
-        output_path = os.path.abspath("{}/output.png".format(self.workspace_path))
-        output_path2 = os.path.abspath("{}/outputgcode.txt".format(self.workspace_path))
         
         # Accède à la pixmap de uploader
         pixmap = self.uploader.get_pixmap()
         if pixmap is None:
             print("Error: No image uploaded.")
             return
-        cv_img = ManipImage(pixmap=pixmap, file_path=self.image_path)
-        cv_img.load_image()
-        cv_img.analyze_image()
-        cv_img.draw_circles(output_path, (400, 600), "white")
-        cv_img.convert_gcode(output_path2, (216, 279), (400, 600))
+        cv_img = ManipImageAdvanced(pixmap=pixmap, file_path=self.image_path)
+        cv_img.initalizeImageFromPixmap()
+        cv_img.applyMaskOnImage()
+        contours = cv_img.findContours()
+        new_contours = cv_img.contourFiltering(contours)
+        final_contours = cv_img.reassembleContours(new_contours)
+        coordinates = cv_img.fillContours(final_contours, 20.0, 0.0)
+        #self.communication.gcode_logic(coordinates)
         
         print("Analysis completed, outputs saved.")
 
@@ -304,7 +307,7 @@ class Window(QMainWindow):
             self.side_buttons_container.setVisible(False)
             self.color_picker.color_container.setVisible(False)
             self.undo_button.setVisible(False)
-            self.export_button.setVisible(False)
+            #self.export_button.setVisible(False)
             self.image_selector.setVisible(True)
             self.analyze_button.setVisible(True)
             self.image_path = None
@@ -317,7 +320,7 @@ class Window(QMainWindow):
             self.side_buttons_container.setVisible(True)
             self.color_picker.color_container.setVisible(True)
             self.undo_button.setVisible(True)
-            self.export_button.setVisible(True)
+            #self.export_button.setVisible(True)
             self.image_selector.setVisible(False)
             self.analyze_button.setVisible(False)
             self.image_path = None

@@ -10,7 +10,9 @@ def off(coord, vec):
 
 class Communication:
 
-    def __init__(self):
+    def __init__(self, window = None):
+
+        self.window = window
         self.hop = 30 #hop height constant in millimeter
         self.flowRate = 2000 
         self.pageSizeMm = [210, 297]
@@ -61,8 +63,12 @@ class Communication:
         try:
 
             self.client.connect(self.host,22, username=self.username, password=self.password)
+            if self.window:
+                self.window.update_connection_status(True)
         except Exception as e:
             print("Incapable d'etablir la connection ssh")
+            if self.window:
+                self.window.update_connection_status(False)
             pass
 
     def closeSSH(self):

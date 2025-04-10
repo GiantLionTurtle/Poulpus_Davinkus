@@ -14,14 +14,11 @@ from Communication import Communication
 import random
 import re
 import pathlib
+import time
 
 class Window(QMainWindow):
     def __init__(self):
         super().__init__()
-
-        self.communication = Communication()
-
-
 
         #Création de la fenêtre principal
         self.setWindowTitle("Poulpus Davinkus")
@@ -141,6 +138,12 @@ class Window(QMainWindow):
         mode_button.setFixedSize(150, 40)
         main_layout.addWidget(mode_button, 0, 5, 1, 1)
 
+        # Add this with your other buttons
+        test_btn = QPushButton("Test Progression")
+        test_btn.clicked.connect(self.test_progression)
+        test_btn.setFixedSize(150, 40)
+        button_layout.addWidget(test_btn)
+
         #self.manip_image = ManipImage()
         #self.analyze_button = QPushButton("Appuie pour 5 big BOOMS")
         self.analyze_button = QPushButton()
@@ -172,6 +175,18 @@ class Window(QMainWindow):
         main_layout.addWidget(self.drawing_selector, 0, 3, 1, 1, Qt.AlignmentFlag.AlignHCenter)
         self.drawing_selector.currentTextChanged.connect(self.drawing_change)
 
+        # Add this with your other UI elements
+        self.connection_status = QLabel()
+        self.update_connection_status(False)  # Initialize as disconnected
+        status_layout = QHBoxLayout()
+        status_layout.addWidget(QLabel("Robot Status:"))
+        status_layout.addWidget(self.connection_status)
+        status_container = QWidget()
+        status_container.setLayout(status_layout)
+        main_layout.addWidget(status_container, 3, 3)  # Adjust position as needed
+
+        self.communication = Communication(self)
+
         self.pen = QPen(QColor("black"))
         self.pen.setWidth(6)
 
@@ -180,11 +195,15 @@ class Window(QMainWindow):
 
     #Fonction pour afficher l'image sélectionné dans la banque
     def image_change(self, s):
+        if s == "Choisir une image":
+            self.clear_canvas()
         self.image_path = self.image_paths.get(s)
         if self.image_path:
             self.uploader.upload_image(self.image_path)
 
     def drawing_change(self, s):
+        if s == "Choisissez un dessin":
+            self.clear_canvas()
         self.drawing_path = self.drawing_paths.get(s)
         if self.drawing_path:
             self.load_drawing()
@@ -315,6 +334,7 @@ class Window(QMainWindow):
     #Efface l'entierté des formes/images sur la toile de gauche
     def clear_canvas(self):
         self.left_canvas.fill_canvas()
+        self.right_canvas.fill_canvas()
         self.shapes.clear()
         self.history.clear()
 
@@ -371,6 +391,50 @@ class Window(QMainWindow):
             draw_star(position, painter, 50)
         elif shape == "Fleur":
             draw_splatter(position, painter)
+
+
+    def draw_progression(self, shape: str, position: QPoint, color: QColor):
+        painter = QPainter(self.right_canvas.canvas)
+        try:
+            self.pen.setColor(color)
+            painter.setPen(self.pen)
+            painter.setBrush(QBrush(color, Qt.BrushStyle.SolidPattern))
+            self.draw_shape(shape, position, painter)
+        finally:
+            painter.end()
+        
+        self.right_label.setPixmap(self.right_canvas.canvas)
+        self.update()  # Force UI refresh
+
+
+    def test_progression(self):
+        if not self.shapes:
+            print("No shapes to draw ")
+            return
+        
+        self.right_canvas.fill_canvas()
+        self.right_label.setPixmap(self.right_canvas.canvas)
+        
+        for shape, pos, color in self.shapes:
+            self.draw_progression(shape, pos, color)
+            QApplication.processEvents()  # Mise èa jour du UI
+            time.sleep(0.5)
+
+    def update_connection_status(self, connected: bool):
+        color = "green" if connected else "red"
+        text = "Connected" if connected else "Disconnected"
+        
+        # Create a colored dot icon
+        pixmap = QPixmap(20, 20)
+        pixmap.fill(Qt.GlobalColor.transparent)
+        painter = QPainter(pixmap)
+        painter.setBrush(QColor(color))
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.drawEllipse(0, 0, 20, 20)
+        painter.end()
+        
+        self.connection_status.setPixmap(pixmap)
+        self.connection_status.setToolTip(f"SSH Connection: {text}")
 
 
 if __name__ == "__main__":

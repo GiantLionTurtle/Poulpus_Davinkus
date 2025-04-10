@@ -7,6 +7,8 @@ from PyQt6.QtCore import Qt
 from dataclasses import dataclass
 from matplotlib import pyplot as plt
 import os
+from typing import List, Dict
+import itertools
 
 class ManipImageAdvanced:
     def __init__(self, pixmap=None, file_path=None):
@@ -14,6 +16,13 @@ class ManipImageAdvanced:
         #Obtained as arguments when instancing the class
         self.pixmap = pixmap
         self.file_path = file_path
+        #To draw circles for tests purposes
+        self.circles = []
+
+    @dataclass
+    class AnalysisData:
+        circles: list
+        circles_color: str
 
     def _convertPixmapToCvImage(self, pixmap:QPixmap) -> np.ndarray:
         try:
@@ -32,7 +41,6 @@ class ManipImageAdvanced:
 
     def getImageName(self):
         try:
-            #print(os.path.basename(os.path.normpath(self.file_path)))
             return os.path.basename(os.path.normpath(self.file_path)) #returns following this format: heart.png
         except Exception as e:
             print(f"Error occured trying to get image name as:{e}")
@@ -218,35 +226,169 @@ class ManipImageAdvanced:
             print(f"Error occured trying to filter the contours:{e}")
     
     def reassembleContours(self, contours):
-        try:
-            valid_contours = [contour for contour in contours if len(contour) > 0]
+        try:          
+            # We'll process contours into groups that should be connected
+            contour_groups = []
             
-            if not valid_contours:
-                print("Warning: No valid contours found!")
-                return np.array([])
+            for current_contour in contours:
+                matched = False
+                
+                # Check against existing groups
+                for group in contour_groups:
+                    # Get all endpoints in this group
+                    group_endpoints = []
+                    for contour in group:
+                        group_endpoints.append(contour[0][0])  # start point
+                        group_endpoints.append(contour[-1][0])  # end point
+                    
+                    # Get current contour's endpoints
+                    current_start = current_contour[0][0]
+                    current_end = current_contour[-1][0]
+                    
+                    # Check if any endpoint is close to any in the group, change 5 for threshold to look around
+                    for point in group_endpoints:
+                        if (np.linalg.norm(point - current_start) < 5 or 
+                            np.linalg.norm(point - current_end) < 5):
+                            group.append(current_contour)
+                            matched = True
+                            break
+                    if matched:
+                        break
+                
+                # If no match found, create a new group
+                if not matched:
+                    contour_groups.append([current_contour])
+            
+            # Now merge contours within each group
+            merged_contours = []
+            for group in contour_groups:
+                if len(group) == 1:
+                    merged_contours.append(group[0])
+                else:
+                    # Start with first contour in group
+                    merged = group[0]
+                    
+                    for contour in group[1:]:
+                        merged_start = merged[0][0]
+                        merged_end = merged[-1][0]
+                        contour_start = contour[0][0]
+                        contour_end = contour[-1][0]
+                        
+                        # Find best connection
+                        dists = {
+                            'start-end': np.linalg.norm(merged_start - contour_end),
+                            'end-start': np.linalg.norm(merged_end - contour_start),
+                            'start-start': np.linalg.norm(merged_start - contour_start),
+                            'end-end': np.linalg.norm(merged_end - contour_end)
+                        }
+                        
+                        min_key = min(dists, key=dists.get)
+                        
+                        if min_key == 'start-end':
+                            merged = np.concatenate([contour[::-1], merged])
+                        elif min_key == 'end-start':
+                            merged = np.concatenate([merged, contour])
+                        elif min_key == 'start-start':
+                            merged = np.concatenate([contour[::-1], merged])
+                        elif min_key == 'end-end':
+                            merged = np.concatenate([merged, contour[::-1]])
+                    
+                    merged_contours.append(merged)
 
-            one_contour = np.concatenate(valid_contours)
+            print(f'Nombre de contours desormais:{len(merged_contours)}')
 
+            #Adjustments specific for each picture:
+            if self.getImageName() == "heart.png":
+                contour1 = merged_contours[0]
+                contour2 = merged_contours[3]
+
+                merged = np.concatenate([contour1,contour2[::-1]])
+                
+                merged_contours[0] = merged
+                del merged_contours[3]
+               
+                if len(merged_contours) >3:
+                    i = len(merged_contours)-1
+                    while len(merged_contours) != 3:
+                        del merged_contours[i]
+                        i = i-1
+            
             #Test if contour reassembles correctly
-            img = self.image
-            img_bgr = cv.cvtColor(img, cv.COLOR_GRAY2RGB)
-            cv.drawContours(img_bgr, one_contour, -1, (0, 0, 255), 3)
-            plt.figure()
-            plt.imshow(img_bgr)
-            plt.show()
-            return one_contour
+            # img = self.image
+            # img_bgr = cv.cvtColor(img, cv.COLOR_GRAY2RGB)
+            # cv.drawContours(img_bgr, merged_contours, -1, (0, 0, 255), 3)
+            # plt.figure()
+            # plt.imshow(img_bgr)
+            # plt.show()
+
+            return merged_contours
+            
         except Exception as e:
-            print(f"Error occured trying to reassemble contours:{e}")
-    
-    def fillContours(self, contours):
+            print(f"Error occurred trying to reassemble contours: {e}")
+            return []
+
+    def _convertMm2Px(self,page_size,image_size,measure_to_convert):
         try:
-            print('Hello')
+            page_height, page_width = page_size
+            image_height, image_width = image_size
+            x_conversion = image_width/page_width
+            y_conversion = image_height/page_height
+            #Want to take the smallest between the two so that at worst some overlapping, but not outside
+            #the range of the sheet on the robot or creating a weird shape
+            if x_conversion > y_conversion:
+                return y_conversion*measure_to_convert
+            return x_conversion*measure_to_convert
+        except Exception as e:
+            print("Error occured while trying to convert the measurement from mm to px: {e}")
+    
+    def fillContours(self, contours, circle_diameter, min_spacing):
+        try:
+            #Initialize list of circle centers
+            circles_data = []
+
+            #Convert the circle radius in mm to px
+            circle_stamp_radius = self._convertMm2Px([279,216], [600,400], circle_diameter)/2
+
+            #Determine the minimum distance between the circle centers, in px
+            min_distance = round(circle_stamp_radius + min_spacing, None)
+
+            for i, contour in enumerate(contours):
+                # Create a blank binary mask for the current contour
+                contour_mask = np.zeros_like(self.image)
+                cv.drawContours(contour_mask, [contour], -1, 255, thickness=cv.FILLED)
+
+                # Grid sampling on the mask
+                height, width = contour_mask.shape
+                for y in range(0, height, min_distance):
+                    for x in range(0, width, min_distance):
+                        # Check if the current grid cell has contour pixels
+                        if contour_mask[y:y + min_distance, x:x + min_distance].sum() > 0:
+                            circles_data.append((x + circle_stamp_radius, y + circle_stamp_radius))  # Center point
+
+            self.circles = circles_data
+
+            self.draw_circles([400,600],'white')
+
+            return self.AnalysisData(circles=circles_data, circles_color='white')
+        
         except Exception as e:
             print(f"Error occured trying to fill contours with stamps:{e}")
 
-        #Hough Transform
-        # lines = cv.HoughLinesP(edges, 1, np.pi/180, 68, minLineLength=1, maxLineGap=250)
-        # # Draw lines on the image
-        # for line in lines:
-        #     x1, y1, x2, y2 = line[0]
-        #     cv.line(image_hsv, (x1, y1), (x2, y2), (255, 255, 255), 3)
+    def draw_circles(self, image_size, background, ):
+        # Create a blank image with a white background
+        output_image = Image.new("RGB", image_size, background)
+        draw = ImageDraw.Draw(output_image)
+        circle_radius = self._convertMm2Px([279,216], [600,400], 20.0)/2
+
+        # Draw the circles
+        for x, y in self.circles:
+            draw.ellipse(
+                [x - circle_radius, y - circle_radius, x + circle_radius, y + circle_radius],
+                outline="red",
+                width=2
+            )
+
+        # Save the output
+        plt.figure()
+        plt.imshow(output_image)
+        plt.show()

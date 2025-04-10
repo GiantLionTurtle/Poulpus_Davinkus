@@ -43,6 +43,7 @@ class Window(QMainWindow):
     "Canadiens": "{}/Images/canadien_logo".format(self.workspace_path),
     "Capybara": "{}/Images/capybara".format(self.workspace_path),
     "Poulpe": "{}/Images/Poulpus_Davinkus".format(self.workspace_path),
+    "Pikachu": "{}/Images/fat_pikachu".format(self.workspace_path),
 }
         #path des différents dessins disponibles dans la banque
         self.drawing_paths = {
@@ -163,6 +164,7 @@ class Window(QMainWindow):
         self.image_selector.addItem(QIcon(self.image_paths.get("Canadiens")), "Canadiens")
         self.image_selector.addItem(QIcon(self.image_paths.get("Capybara")), "Capybara")
         self.image_selector.addItem(QIcon(self.image_paths.get("Poulpe")), "Poulpe")
+        self.image_selector.addItem(QIcon(self.image_paths.get("Pikachu")), "Pikachu")
         main_layout.addWidget(self.image_selector, 0, 0, 1, 1, Qt.AlignmentFlag.AlignHCenter)
         self.image_selector.hide()
         self.image_selector.currentTextChanged.connect(self.image_change)
@@ -223,7 +225,7 @@ class Window(QMainWindow):
         new_contours = cv_img.contourFiltering(contours)
         final_contours = cv_img.reassembleContours(new_contours)
         coordinates = cv_img.fillContours(final_contours, 20.0, 0.0)
-        self.communication.gcode_logic(coordinates)
+        #self.communication.gcode_logic(coordinates)
         
         print("Analysis completed, outputs saved.")
 

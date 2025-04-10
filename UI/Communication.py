@@ -32,7 +32,8 @@ class Communication:
         self.stampsTake_seqs = [self.make_take(stamp1_l, side_wiggle_amp), self.make_take(stamp2_l, side_wiggle_amp), self.make_take(stamp3_l, side_wiggle_amp), self.make_take(stamp4_l, side_wiggle_amp)]
         self.stampsDrop_seqs = [self.make_drop(stamp1_l), self.make_drop(stamp2_l), self.make_drop(stamp3_l), self.make_drop(stamp4_l)]
         
-        self.inkPoolPosition = self.rotate_matrix(self.pageSizeMm[0]/2, 15, 98)
+        middleinkpoolpos = [self.pageSizeMm[0]/2, 15, 98]
+        self.inkPoolPosition = [self.rotate_matrix(off(middleinkpoolpos, [-45, 0, 0])), self.rotate_matrix(middleinkpoolpos), self.rotate_matrix(off(middleinkpoolpos, [45, 0, 0]))]
 
         self.refillValue = 3
         self.host = "poulpus.local"
@@ -87,7 +88,9 @@ class Communication:
         Y = np.sin(angle)*x + np.cos(angle)*y 
 
         return [X,Y,z]
-    
+    def rotate_matrix(self, listthing):
+        return self.rotate_matrix(listthing[0], listthing[1], listthing[2])
+
     def rotate_seq(self, seq):
         out = []
         for elem in seq:
@@ -146,12 +149,20 @@ class Communication:
         #Set slower flow rate to avoid big Splash
         normalFr = self.flowRate
         
+        pool_index = 0
+        if color == "#ff0000": # Red
+            pool_index = 0
+        elif color == "#ffff00": # Blue
+            pool_index = 1
+        elif color == "#00ffff": # Yellow
+            pool_index = 2
+        else: # Black
+            pool_index = 3
 
-        self.position_to_gcode(self.inkPoolPosition[0],self.inkPoolPosition[1],self.inkPoolPosition[2] + 60)
-        
+        self.position_to_gcode(self.inkPoolPosition[pool_index][0], self.inkPoolPosition[pool_index][1], self.inkPoolPosition[pool_index][2] + 60)
         self.flowRate = normalFr/2
-        self.position_to_gcode(self.inkPoolPosition[0],self.inkPoolPosition[1],self.inkPoolPosition[2])
-        self.position_to_gcode(self.inkPoolPosition[0],self.inkPoolPosition[1],self.inkPoolPosition[2] + 60)
+        self.position_to_gcode(self.inkPoolPosition[pool_index][0], self.inkPoolPosition[pool_index][1], self.inkPoolPosition[pool_index][2])
+        self.position_to_gcode(self.inkPoolPosition[pool_index][0], self.inkPoolPosition[pool_index][1], self.inkPoolPosition[pool_index][2] + 60)
 
         #Set normal flow rate back
         self.flowRate = normalFr

@@ -22,7 +22,8 @@ class ManipImageAdvanced:
     @dataclass
     class AnalysisData:
         circles: list
-        circles_color: str
+        circles_shape: list
+        circles_color: list
 
     def _convertPixmapToCvImage(self, pixmap:QPixmap) -> np.ndarray:
         try:
@@ -345,6 +346,8 @@ class ManipImageAdvanced:
         try:
             #Initialize list of circle centers
             circles_data = []
+            circles_color_list = []
+            circles_shape_list = []
 
             #Convert the circle radius in mm to px
             circle_stamp_radius = self._convertMm2Px([279,216], [600,400], circle_diameter)/2
@@ -352,35 +355,47 @@ class ManipImageAdvanced:
             #Determine the minimum distance between the circle centers, in px
             min_distance = round(circle_stamp_radius + min_spacing, None)
 
-            for i, contour in enumerate(contours):
+            coverage_mask = np.zeros_like(self.image)
+            for i,contour in enumerate(contours):
+                # if i in {1,2}:
+                #     continue
                 # Create a blank binary mask for the current contour
                 contour_mask = np.zeros_like(self.image)
+                #Pour faire des cercles sur les contours
                 cv.drawContours(contour_mask, [contour], -1, 255, thickness=cv.FILLED)
 
                 # Grid sampling on the mask
                 height, width = contour_mask.shape
                 for y in range(0, height, min_distance):
                     for x in range(0, width, min_distance):
-                        # Check if the current grid cell has contour pixels
-                        if contour_mask[y:y + min_distance, x:x + min_distance].sum() > 0:
-                            circles_data.append((x + circle_stamp_radius, y + circle_stamp_radius))  # Center point
+                        #Pour les contours
+                        if not np.any(contour_mask[y:y+min_distance, x:x+min_distance]):
+                            continue
+                        if np.any(coverage_mask[x:x+min_distance, y:y+min_distance]):
+                            continue
+                        #Le -5 pour creer un effet de superposition
+                        center = (round(x + circle_stamp_radius), round(y + circle_stamp_radius))
+                        circles_data.append(center)
+                        circle_shape = 'Cercle'
+                        circles_shape_list.append(circle_shape)
+                        circle_color = 'Rouge'
+                        circles_color_list.append(circle_color)
+                        cv.circle(coverage_mask, center, round(circle_stamp_radius), 255, cv.FILLED)
 
             self.circles = circles_data
 
             self.draw_circles([400,600],'white')
 
-            return self.AnalysisData(circles=circles_data, circles_color='white')
+            return self.AnalysisData(circles=circles_data,circles_shape=circles_shape_list, circles_color=circles_color_list)
         
         except Exception as e:
             print(f"Error occured trying to fill contours with stamps:{e}")
 
     def draw_circles(self, image_size, background, ):
-        # Create a blank image with a white background
         output_image = Image.new("RGB", image_size, background)
         draw = ImageDraw.Draw(output_image)
         circle_radius = self._convertMm2Px([279,216], [600,400], 20.0)/2
 
-        # Draw the circles
         for x, y in self.circles:
             draw.ellipse(
                 [x - circle_radius, y - circle_radius, x + circle_radius, y + circle_radius],
@@ -388,7 +403,6 @@ class ManipImageAdvanced:
                 width=2
             )
 
-        # Save the output
         plt.figure()
         plt.imshow(output_image)
         plt.show()

@@ -28,7 +28,7 @@ class Communication:
         stamp3_l = [-35, self.pageSizeMm[1]/2  - 50, 112]
         stamp4_l = [-35, self.pageSizeMm[1]/2 - 127, 112]
 
-        side_wiggle_amp = 10
+        side_wiggle_amp = 15
         self.stampsTake_seqs = [self.make_take(stamp1_l, side_wiggle_amp), self.make_take(stamp2_l, side_wiggle_amp), self.make_take(stamp3_l, side_wiggle_amp), self.make_take(stamp4_l, side_wiggle_amp)]
         self.stampsDrop_seqs = [self.make_drop(stamp1_l), self.make_drop(stamp2_l), self.make_drop(stamp3_l), self.make_drop(stamp4_l)]
         
@@ -48,9 +48,9 @@ class Communication:
         
 
     def make_take(self, init, side_wiggle):
-        return self.rotate_seq([off(init, [80, 0, 7]), init, off(init, [0, side_wiggle, 8]), off(init, [0, -side_wiggle, 8]), off(init, [0, 0, 8]), off(init, [80, 0, 7])])
+        return self.rotate_seq([off(init, [80, 0, 10]), off(init, [0, 0, 20]), init, off(init, [0, side_wiggle, 0]), off(init, [0, -side_wiggle, 0]), off(init, [0, 0, 10]), off(init, [80, 0, 10])])
     def make_drop(self, init):
-        return  self.rotate_seq([off(init, [80, 0, 7]), init, off(init, [0, 0, 20]), off(init, [80, 0, 20])])
+        return  self.rotate_seq([off(init, [80, 0, 10]), init, off(init, [0, 0, 20]), off(init, [80, 0, 20])])
     
     def openSSH(self):
         try:
@@ -82,7 +82,7 @@ class Communication:
     
     def rotate_matrix(self,x,y,z):
         x = -(x+20 - (self.pageSizeMm[0])/2)
-        y = self.pageSizeMm[1] - (y+40) - (self.pageSizeMm[1])/2
+        y = self.pageSizeMm[1] - (y+50) - (self.pageSizeMm[1])/2
         angle = -np.pi/6
         X = np.cos(angle)*x - np.sin(angle)*y 
         Y = np.sin(angle)*x + np.cos(angle)*y 
@@ -152,17 +152,17 @@ class Communication:
         pool_index = 0
         if color == "#ff0000": # Red
             pool_index = 0
-        elif color == "#ffff00": # Blue
-            pool_index = 1
+        # elif color == "#ffff00": # Blue
+        #     pool_index = 1
         elif color == "#00ffff": # Yellow
-            pool_index = 2
+            pool_index = 1
         else: # Black
-            pool_index = 3
+            pool_index = 2
 
-        self.position_to_gcode(self.inkPoolPosition[pool_index][0], self.inkPoolPosition[pool_index][1], self.inkPoolPosition[pool_index][2] + 60)
+        self.position_to_gcode(self.inkPoolPosition[pool_index][0], self.inkPoolPosition[pool_index][1], self.inkPoolPosition[pool_index][2] + 40)
         self.flowRate = normalFr/2
-        self.position_to_gcode(self.inkPoolPosition[pool_index][0], self.inkPoolPosition[pool_index][1], self.inkPoolPosition[pool_index][2])
-        self.position_to_gcode(self.inkPoolPosition[pool_index][0], self.inkPoolPosition[pool_index][1], self.inkPoolPosition[pool_index][2] + 60)
+        self.position_to_gcode(self.inkPoolPosition[pool_index][0], self.inkPoolPosition[pool_index][1], self.inkPoolPosition[pool_index][2] + 5)
+        self.position_to_gcode(self.inkPoolPosition[pool_index][0], self.inkPoolPosition[pool_index][1], self.inkPoolPosition[pool_index][2] + 40)
 
         #Set normal flow rate back
         self.flowRate = normalFr

@@ -23,16 +23,16 @@ class Communication:
         self.currentShape = None
         self.homeNotHome = [0,0,120]
 
-        stamp1_l = [-24, self.pageSizeMm[1]/2 + 105, 112]
-        stamp2_l = [-24, self.pageSizeMm[1]/2 + 44, 113]
-        stamp3_l = [-24, self.pageSizeMm[1]/2  - 10, 112]
-        stamp4_l = [-24, self.pageSizeMm[1]/2 - 87, 112]
+        stamp1_l = [-35, self.pageSizeMm[1]/2 + 65, 112]
+        stamp2_l = [-35, self.pageSizeMm[1]/2 + 4, 113]
+        stamp3_l = [-35, self.pageSizeMm[1]/2  - 50, 112]
+        stamp4_l = [-35, self.pageSizeMm[1]/2 - 127, 112]
 
-        side_wiggle_amp = 5
+        side_wiggle_amp = 10
         self.stampsTake_seqs = [self.make_take(stamp1_l, side_wiggle_amp), self.make_take(stamp2_l, side_wiggle_amp), self.make_take(stamp3_l, side_wiggle_amp), self.make_take(stamp4_l, side_wiggle_amp)]
         self.stampsDrop_seqs = [self.make_drop(stamp1_l), self.make_drop(stamp2_l), self.make_drop(stamp3_l), self.make_drop(stamp4_l)]
         
-        self.inkPoolPosition = self.rotate_matrix(self.pageSizeMm[0]/2, -15, 98)
+        self.inkPoolPosition = self.rotate_matrix(self.pageSizeMm[0]/2 - 20, -30, 103)
 
         self.refillValue = 3
         self.host = "poulpus.local"
@@ -80,8 +80,8 @@ class Communication:
         return PositionMeters
     
     def rotate_matrix(self,x,y,z):
-        x = -(x - (self.pageSizeMm[0])/2)
-        y = self.pageSizeMm[1] - y - (self.pageSizeMm[1])/2 + 30
+        x = -(x+20 - (self.pageSizeMm[0])/2)
+        y = self.pageSizeMm[1] - (y+40) - (self.pageSizeMm[1])/2
         angle = -np.pi/6
         X = np.cos(angle)*x - np.sin(angle)*y 
         Y = np.sin(angle)*x + np.cos(angle)*y 

@@ -371,7 +371,7 @@ class ManipImageAdvanced:
                         x_center = round(x + circle_stamp_radius)
                         y_center = round(y + circle_stamp_radius)
                         circle_shape = 'Cercle'
-                        circle_color = 'Rouge'
+                        circle_color = '#ff0000'
                         gcode_list.append((x_center,y_center,circle_shape,circle_color))
                         
                         cv.circle(coverage_mask, center, round(circle_stamp_radius), 255, cv.FILLED)

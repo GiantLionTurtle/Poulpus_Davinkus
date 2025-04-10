@@ -81,13 +81,14 @@ class Window(QMainWindow):
         option_menu.addAction(save_drawing_button)
 
         # Boutons des différentes couleurs
-        self.color_picker = ColorPicker(self)
-        main_layout.addWidget(self.color_picker.color_container, 0, 1, 1, 2, Qt.AlignmentFlag.AlignCenter & Qt.AlignmentFlag.AlignJustify)
+        # self.color_picker = ColorPicker(self)
+        # main_layout.addWidget(self.color_picker.color_container, 0, 1, 1, 2, Qt.AlignmentFlag.AlignCenter & Qt.AlignmentFlag.AlignJustify)
   
         # Boutons des différentes formes
         self.side_buttons_container = QWidget()
         side_buttons_layout = QVBoxLayout()
-        shapes = ["Carré", "Triangle", "Cercle", "Fleur", "Étoile"]
+        #shapes = ["Carré", "Triangle", "Cercle", "Fleur", "Étoile"]
+        shapes = ["Carré", "Cercle", "Etoile"]
         for shape in shapes:
             btn = QPushButton(shape)
             btn.setFixedSize(80, 30)
@@ -99,13 +100,13 @@ class Window(QMainWindow):
         #Toile de gauche
         self.left_canvas = Canvas(self)
         self.left_label = self.left_canvas.canevas_label
-        self.left_label.setFixedSize(400, 600)
+        self.left_label.setFixedSize(400, 445)
         main_layout.addWidget(self.left_label, 1, 1, 1, 2, Qt.AlignmentFlag.AlignCenter)
 
         #Toile de droite
         self.right_canvas = Canvas(self)
         self.right_label = self.right_canvas.canevas_label
-        self.right_label.setFixedSize(400, 600)
+        self.right_label.setFixedSize(400, 445)
         main_layout.addWidget(self.right_label, 1, 4, 1, 2, Qt.AlignmentFlag.AlignCenter)
 
         # coutainer du bouton en dessous de la toile de gauche
@@ -146,10 +147,7 @@ class Window(QMainWindow):
         button_layout.addWidget(test_btn)
 
         #self.manip_image = ManipImage()
-        #self.analyze_button = QPushButton("Appuie pour 5 big BOOMS")
-        self.analyze_button = QPushButton()
-        self.analyze_button.setIcon(QIcon("{}/UI/Bouton.png".format(self.workspace_path)))
-        self.analyze_button.setIconSize(QSize(150, 40))
+        self.analyze_button = QPushButton("Analyser l'image")
         self.analyze_button.clicked.connect(self.test_analyze)
         self.analyze_button.setFixedSize(150, 40)
         main_layout.addWidget(self.analyze_button, 0, 1, 1, 1, Qt.AlignmentFlag.AlignHCenter)
@@ -174,18 +172,18 @@ class Window(QMainWindow):
         self.drawing_selector = QComboBox()
         self.drawing_selector.setFixedSize(200, 50)
         self.drawing_selector.addItems(["Choisissez un dessin","Foret", "Chat", "Voiture"])
-        main_layout.addWidget(self.drawing_selector, 0, 3, 1, 1, Qt.AlignmentFlag.AlignHCenter)
+        main_layout.addWidget(self.drawing_selector, 0, 2, 1, 1, Qt.AlignmentFlag.AlignHCenter)
         self.drawing_selector.currentTextChanged.connect(self.drawing_change)
 
-        # Add this with your other UI elements
+        # Label pour afficher l'état de la connection
         self.connection_status = QLabel()
-        self.update_connection_status(False)  # Initialize as disconnected
+        self.update_connection_status(False) 
         status_layout = QHBoxLayout()
-        status_layout.addWidget(QLabel("Robot Status:"))
+        status_layout.addWidget(QLabel("Connection au robot:"))
         status_layout.addWidget(self.connection_status)
         status_container = QWidget()
         status_container.setLayout(status_layout)
-        main_layout.addWidget(status_container, 3, 3)  # Adjust position as needed
+        main_layout.addWidget(status_container, 2, 5)  
 
         self.communication = Communication(self)
 
@@ -224,8 +222,8 @@ class Window(QMainWindow):
         contours = cv_img.findContours()
         new_contours = cv_img.contourFiltering(contours)
         final_contours = cv_img.reassembleContours(new_contours)
-        #coordinates = cv_img.placeCircles(final_contours, 20.0, 0.0)
-        coordinates = cv_img.testPlaceCircles(final_contours, 20.0, 30.0)
+        coordinates = cv_img.fillContours(final_contours, 20.0, 0.0)
+        self.shapes = coordinates
         #self.communication.gcode_logic(coordinates)
         
         print("Analysis completed, outputs saved.")
@@ -242,10 +240,7 @@ class Window(QMainWindow):
             return
 
         with open(file_path, "w") as f:
-            for shape, position, color in self.shapes:
-                x = position.x()
-                y = position.y()
-                #color_str = color.name()  
+            for x, y, shape, color in self.shapes:
                 f.write(f"SHAPE {shape} X{x} Y{y} COLOR {color}\n")
 
         print(f"Drawing saved to '{file_path}'")
@@ -264,9 +259,8 @@ class Window(QMainWindow):
                 match = re.search(r'SHAPE (\w+) X(-?\d+) Y(-?\d+) COLOR (#\w+)', line)
                 if match:
                     shape, x, y, color = match.groups()
-                    position = QPoint(int(x), int(y))
-                    qcolor = QColor(color) 
-                    self.shapes.append((shape, position, qcolor))
+                    # Store as (x, y, shape, color) to match manual drawing format
+                    self.shapes.append((int(x), int(y), shape, color))
 
         self.redraw_canvas()
 
@@ -310,9 +304,9 @@ class Window(QMainWindow):
         if self.current_mode == "Drawing":
             self.current_mode = "Image"
             self.side_buttons_container.setVisible(False)
-            self.color_picker.color_container.setVisible(False)
+            #self.color_picker.color_container.setVisible(False)
             self.undo_button.setVisible(False)
-            #self.export_button.setVisible(False)
+            self.export_button.setVisible(False)
             self.image_selector.setVisible(True)
             self.analyze_button.setVisible(True)
             self.image_path = None
@@ -323,9 +317,9 @@ class Window(QMainWindow):
         else:
             self.current_mode = "Drawing"
             self.side_buttons_container.setVisible(True)
-            self.color_picker.color_container.setVisible(True)
+            #self.color_picker.color_container.setVisible(True)
             self.undo_button.setVisible(True)
-            #self.export_button.setVisible(True)
+            self.export_button.setVisible(True)
             self.image_selector.setVisible(False)
             self.analyze_button.setVisible(False)
             self.image_path = None
@@ -334,6 +328,12 @@ class Window(QMainWindow):
     #Ajuste la bonne forme à utiliser en fonction du choix de l'utilisateur
     def set_shape(self, shape):
         self.current_shape = shape
+        if shape == "Triangle" or "Carré":
+            self.current_color = QColor(Qt.GlobalColor.black)
+        if shape == "Etoile":
+            self.current_color = QColor(Qt.GlobalColor.yellow)
+        if shape == "Cercle":
+            self.current_color = QColor(Qt.GlobalColor.red)
 
     #Efface l'entierté des formes/images sur la toile de gauche
     def clear_canvas(self):
@@ -352,16 +352,18 @@ class Window(QMainWindow):
     def undo(self):
         if self.shapes:  
             self.shapes.pop()  
+            print("Self shapes: {}".format(self.shapes))
             self.redraw_canvas()
 
     #Redessine la toile de gauche après une modification
     def redraw_canvas(self):
         self.left_canvas.fill_canvas() 
         painter = QPainter(self.left_canvas.canvas)
-        for shape, position, color in self.shapes:
+        for x, y, shape, color in self.shapes:
             self.pen.setColor(QColor(color))
             painter.setPen(self.pen)
             painter.setBrush(QBrush(QColor(color), Qt.BrushStyle.SolidPattern))
+            position = QPoint(x, y)
             self.draw_shape(shape, position, painter)
         painter.end()
         self.left_label.setPixmap(self.left_canvas.canvas)
@@ -369,40 +371,60 @@ class Window(QMainWindow):
     #Ajoute une forme lorsque l'utilisateur appuis dans une zone de la toile de gauche uniquement
     def mousePressEvent(self, event):
         if self.current_mode == "Drawing":
+            abs_position = event.pos()
             position = self.left_label.mapFrom(self, event.pos())
             painter = QPainter(self.left_canvas.canvas)
             self.pen.setColor(self.current_color)
             painter.setPen(self.pen)
             painter.setBrush(QBrush(self.current_color, Qt.BrushStyle.SolidPattern))
 
-            if self.current_shape in ["Cercle", "Carré", "Triangle", "Étoile", "Fleur"]:
+            #if self.current_shape in ["Cercle", "Carré", "Triangle", "Étoile", "Fleur"]:
+            if self.current_shape in ["Cercle", "Carré", "Etoile"]:
                 x = position.x()
                 y = position.y()
-                self.shapes.append((x, y, self.current_shape,self.current_color.name()))
+                self.shapes.append((x, y, self.current_shape, self.current_color.name()))
                 self.draw_shape(self.current_shape, position, painter)
 
             painter.end()
             self.left_label.setPixmap(self.left_canvas.canvas)
 
+
+    def _convertMm2Px(self,page_size,image_size,measure_to_convert):
+        try:
+            page_height, page_width = page_size
+            image_height, image_width = image_size
+            x_conversion = image_width/page_width
+            y_conversion = image_height/page_height
+            #Want to take the smallest between the two so that at worst some overlapping, but not outside
+            #the range of the sheet on the robot or creating a weird shape
+            if x_conversion > y_conversion:
+                return y_conversion*measure_to_convert
+            return x_conversion*measure_to_convert
+        except Exception as e:
+            print("Error occured while trying to convert the measurement from mm to px: {e}")
+
+
     def draw_shape(self, shape, position, painter):
+        shape_size = round(self._convertMm2Px([195,175], [445,400], 20))
         if shape == "Cercle":
-            draw_circle(position, painter, 50)
+            draw_circle(position, painter, shape_size)
         elif shape == "Carré":
-            draw_square(position, painter, 50)
+            draw_square(position, painter, shape_size)
         elif shape == "Triangle":
-            draw_triangle(position, painter, 50)
-        elif shape == "Étoile":
-            draw_star(position, painter, 50)
+            draw_triangle(position, painter, shape_size)
+        elif shape == "Etoile":
+            draw_star(position, painter, shape_size)
         elif shape == "Fleur":
             draw_splatter(position, painter)
 
 
-    def draw_progression(self, shape: str, position: QPoint, color: QColor):
+    def draw_progression(self, shape: str, x: int, y: int, color: QColor):
         painter = QPainter(self.right_canvas.canvas)
         try:
             self.pen.setColor(color)
             painter.setPen(self.pen)
             painter.setBrush(QBrush(color, Qt.BrushStyle.SolidPattern))
+            position = QPoint(x, y)
             self.draw_shape(shape, position, painter)
         finally:
             painter.end()
@@ -413,16 +435,17 @@ class Window(QMainWindow):
 
     def test_progression(self):
         if not self.shapes:
-            print("No shapes to draw ")
+            print("No shapes to draw")
             return
         
         self.right_canvas.fill_canvas()
         self.right_label.setPixmap(self.right_canvas.canvas)
         
-        for shape, pos, color in self.shapes:
-            self.draw_progression(shape, pos, color)
-            QApplication.processEvents()  # Mise èa jour du UI
-            time.sleep(0.5)
+        for x, y, shape, color_name in self.shapes:
+            color = QColor(color_name)
+            self.draw_progression(shape, x, y, color)
+            QApplication.processEvents()  # Update UI
+            time.sleep(1)
 
     def update_connection_status(self, connected: bool):
         color = "green" if connected else "red"

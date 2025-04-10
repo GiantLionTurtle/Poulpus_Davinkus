@@ -367,7 +367,7 @@ class Window(QMainWindow):
     def mousePressEvent(self, event):
         if self.current_mode == "Drawing":
             abs_position = event.pos()
-            print(abs_position)
+            # print(abs_position)
             position = self.left_label.mapFrom(self, event.pos())
             print(position)
             painter = QPainter(self.left_canvas.canvas)

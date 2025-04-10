@@ -16,15 +16,15 @@ class Communication:
         self.hop = 40 #hop height constant in millimeter
         self.flowRate = 2500 
         self.pageSizeMm = [175, 195]
-        self.pageSizePix = [400, 600] # NEEDS TO BE CHANGED
-        self.pageHeight = 75  #height in the Z axis to stamp
+        self.pageSizePix = [400, 445] # NEEDS TO BE CHANGED
+        self.pageHeight = 72  #height in the Z axis to stamp
         self.gcode = []
         self.currentColor = None
         self.currentShape = None
         self.homeNotHome = [0,0,120]
 
-        stamp1_l = [-24, self.pageSizeMm[1]/2 + 100, 112]
-        stamp2_l = [-24, self.pageSizeMm[1]/2 + 44, 112]
+        stamp1_l = [-24, self.pageSizeMm[1]/2 + 105, 112]
+        stamp2_l = [-24, self.pageSizeMm[1]/2 + 44, 113]
         stamp3_l = [-24, self.pageSizeMm[1]/2  - 10, 112]
         stamp4_l = [-24, self.pageSizeMm[1]/2 - 87, 112]
 
@@ -32,7 +32,7 @@ class Communication:
         self.stampsTake_seqs = [self.make_take(stamp1_l, side_wiggle_amp), self.make_take(stamp2_l, side_wiggle_amp), self.make_take(stamp3_l, side_wiggle_amp), self.make_take(stamp4_l, side_wiggle_amp)]
         self.stampsDrop_seqs = [self.make_drop(stamp1_l), self.make_drop(stamp2_l), self.make_drop(stamp3_l), self.make_drop(stamp4_l)]
         
-        self.inkPoolPosition = self.rotate_matrix(self.pageSizeMm[0]/2, 15, 98)
+        self.inkPoolPosition = self.rotate_matrix(self.pageSizeMm[0]/2, -15, 98)
 
         self.refillValue = 3
         self.host = "poulpus.local"
@@ -55,11 +55,11 @@ class Communication:
         try:
             self.client = paramiko.client.SSHClient()
             self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            self.client.connect(self.host,22, username=self.username, password=self.password, timeout=15, allow_agent=False)
+            self.client.connect(self.host,22, username=self.username, password=self.password, timeout=30, allow_agent=False)
             if self.window:
                 self.window.update_connection_status(True)
             
-            self.client.get_transport().set_keepalive(15)
+            self.client.get_transport().set_keepalive(5)
 
 
         except Exception as e:
@@ -81,7 +81,7 @@ class Communication:
     
     def rotate_matrix(self,x,y,z):
         x = -(x - (self.pageSizeMm[0])/2)
-        y = self.pageSizeMm[1] - y - (self.pageSizeMm[1])/2
+        y = self.pageSizeMm[1] - y - (self.pageSizeMm[1])/2 + 30
         angle = -np.pi/6
         X = np.cos(angle)*x - np.sin(angle)*y 
         Y = np.sin(angle)*x + np.cos(angle)*y 

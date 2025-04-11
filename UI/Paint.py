@@ -224,7 +224,7 @@ class Window(QMainWindow):
         final_contours = cv_img.reassembleContours(new_contours)
         coordinates = cv_img.placeCircles(final_contours, 20.0, 25.0)
         self.shapes = coordinates
-        #self.communication.gcode_logic(coordinates)
+        self.communication.gcode_logic(coordinates)
         
         print("Analysis completed, outputs saved.")
 

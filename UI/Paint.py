@@ -333,7 +333,7 @@ class Window(QMainWindow):
         if shape == "Etoile":
             self.current_color = QColor(Qt.GlobalColor.yellow)
         if shape == "Cercle":
-            self.current_color = QColor(Qt.GlobalColor.red)
+            self.current_color = QColor(Qt.GlobalColor.blue)
 
     #Efface l'entierté des formes/images sur la toile de gauche
     def clear_canvas(self):

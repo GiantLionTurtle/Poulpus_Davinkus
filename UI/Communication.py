@@ -1,12 +1,21 @@
 import numpy as np
 import cv2 as cv
 import paramiko
+from threading import Thread, Event
+import time
+
 
 def off(coord, vec):
     out = [0, 0, 0]
     for i in range(0, 3):
         out[i] = coord[i] + vec[i]
     return out
+
+def keep_sftp_alive(transport, stop_event, interval=60):
+    # https://stackoverflow.com/questions/50009688/python-paramiko-ssh-session-not-active-after-being-idle-for-many-hours
+    while not stop_event.is_set():
+        time.sleep(interval)
+        transport.send_ignore()
 
 class Communication:
 
@@ -24,11 +33,11 @@ class Communication:
         self.homeNotHome = [0,0,120]
 
         stamp1_l = [-40, self.pageSizeMm[1]/2 + 65, 112]
-        stamp2_l = [-40, self.pageSizeMm[1]/2 + 4, 113]
+        stamp2_l = [-40, self.pageSizeMm[1]/2 + 6, 113]
         stamp3_l = [-40, self.pageSizeMm[1]/2  - 50, 112]
         stamp4_l = [-35, self.pageSizeMm[1]/2 - 97, 112]
 
-        side_wiggle_amp = 15
+        side_wiggle_amp = 8
         self.stampsTake_seqs = [self.make_take(stamp1_l, side_wiggle_amp), self.make_take(stamp2_l, side_wiggle_amp), self.make_take(stamp3_l, side_wiggle_amp), self.make_take(stamp4_l, side_wiggle_amp)]
         self.stampsDrop_seqs = [self.make_drop(stamp1_l), self.make_drop(stamp2_l), self.make_drop(stamp3_l), self.make_drop(stamp4_l)]
         
@@ -39,29 +48,38 @@ class Communication:
         self.host = "poulpus.local"
         self.username = "poulpus"
         self.password = "davinkus"
-        
+        self.rpi_shell = None
+
         self.openSSH()
+        self.closeSSH()
+
+        # self.stop_event= Event()
+        # keep_alive_thread = Thread(target=keep_sftp_alive, args=(self.client.get_transport(), self.stop_event, ))
+        # keep_alive_thread.daemon = True
+        # keep_alive_thread.start()
 
     def __del__(self):
         print("Fermeture du tunel ssh!")
-        self.closeSSH()
+        # self.stop_event.set()
+        # time.sleep(1)
+        # self.closeSSH()
         
 
     def make_take(self, init, side_wiggle):
         return self.rotate_seq([off(init, [70, 0, 10]), off(init, [0, 0, 20]), init, off(init, [0, side_wiggle, 0]), off(init, [0, -side_wiggle, 0]), off(init, [0, 0, 10]), off(init, [70, 0, 10])])
     def make_drop(self, init):
-        return  self.rotate_seq([off(init, [70, 0, 10]), init, off(init, [0, 0, 20]), off(init, [70, 0, 20])])
+        return  self.rotate_seq([off(init, [70, 0, 10]), init, off(init, [0, 0, 25]), off(init, [70, 0, 20])])
     
     def openSSH(self):
         try:
             self.client = paramiko.client.SSHClient()
             self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            self.client.connect(self.host,22, username=self.username, password=self.password, timeout=30, allow_agent=False)
+            self.client.connect(self.host, 22, username=self.username, password=self.password, allow_agent=False)
             if self.window:
                 self.window.update_connection_status(True)
             
-            self.client.get_transport().set_keepalive(5)
-
+            self.client.get_transport().set_keepalive(60)
+            # self.rpi_shell = self.client.invoke_shell()
 
         except Exception as e:
             print("Incapable d'etablir la connection ssh")
@@ -74,9 +92,6 @@ class Communication:
 
     
     def pixel_to_mm(self,positionPixel, refPixels, refMm):
-
-
-
         PositionMeters = (positionPixel/refPixels) * refMm
         return PositionMeters
     
@@ -152,12 +167,14 @@ class Communication:
         pool_index = 0
         # if color == "#ff0000": # Red
         #     pool_index = 0
-        if color == "#ffff00": # Blue
+        if color == "#0000ff": # Blue
             pool_index = 0
-        elif color == "#00ffff": # Yellow
+        elif color == "#ffff00": # Yellow
             pool_index = 1
         else: # Black
             pool_index = 2
+
+        print("COULEUR:{}".format(color))
 
         self.position_to_gcode(self.inkPoolPosition[pool_index][0], self.inkPoolPosition[pool_index][1], self.inkPoolPosition[pool_index][2] + 40)
         self.flowRate = normalFr/2
@@ -177,9 +194,10 @@ class Communication:
         
         self.gcode = [] 
         print("Sending: '{}'".format(msg))
-
-        stdin, stdout, stderr = self.client.exec_command("echo '{}' >> /tmp/printer".format(msg))
         
+        self.openSSH()
+        self.client.exec_command("echo '{}' >> /tmp/printer\n".format(msg))
+        self.closeSSH()
 
 
     # this function generate the total path, including hops and change of color/shape of stamps

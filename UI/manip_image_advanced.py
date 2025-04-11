@@ -382,7 +382,7 @@ class ManipImageAdvanced:
                     x_center = x
                     y_center = y
                     circle_shape = 'Cercle'
-                    circle_color = 'Rouge'
+                    circle_color = 'Noir'
                     gcode_list.append((x_center,y_center,circle_shape,circle_color))
 
                 i = i+1

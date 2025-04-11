@@ -23,7 +23,7 @@ class Communication:
 
         self.window = window
         self.hop = 40 #hop height constant in millimeter
-        self.flowRate = 2500 
+        self.flowRate = 9000 
         self.pageSizeMm = [175, 195]
         self.pageSizePix = [400, 445] # NEEDS TO BE CHANGED
         self.pageHeight = 72  #height in the Z axis to stamp
@@ -41,8 +41,8 @@ class Communication:
         self.stampsTake_seqs = [self.make_take(stamp1_l, side_wiggle_amp), self.make_take(stamp2_l, side_wiggle_amp), self.make_take(stamp3_l, side_wiggle_amp), self.make_take(stamp4_l, side_wiggle_amp)]
         self.stampsDrop_seqs = [self.make_drop(stamp1_l), self.make_drop(stamp2_l), self.make_drop(stamp3_l), self.make_drop(stamp4_l)]
         
-        middleinkpoolpos = [self.pageSizeMm[0]/2 - 20, -30, 103]
-        self.inkPoolPosition = self.rotate_seq([off(middleinkpoolpos, [-40, 0, 0]), middleinkpoolpos, off(middleinkpoolpos, [40, 0, 0])])
+        middleinkpoolpos = [self.pageSizeMm[0]/2 - 20, -25, 103]
+        self.inkPoolPosition = self.rotate_seq([off(middleinkpoolpos, [-40, 0, 0]), middleinkpoolpos, off(middleinkpoolpos, [35, 0, 0])])
 
         self.refillValue = 3
         self.host = "poulpus.local"
@@ -51,7 +51,6 @@ class Communication:
         self.rpi_shell = None
 
         self.openSSH()
-        self.closeSSH()
 
         # self.stop_event= Event()
         # keep_alive_thread = Thread(target=keep_sftp_alive, args=(self.client.get_transport(), self.stop_event, ))
@@ -137,7 +136,7 @@ class Communication:
         if self.currentShape == "Cercle":
             self.send_seq(self.stampsDrop_seqs[3])
             
-        if self.currentShape == "Carré":
+        if self.currentShape == "Carre":
             self.send_seq(self.stampsDrop_seqs[1])
 
         if self.currentShape == "Etoile":
@@ -147,7 +146,7 @@ class Communication:
         if shape == "Cercle":
             self.send_seq(self.stampsTake_seqs[3])
 
-        if shape == "Carré":
+        if shape == "Carre":
             self.send_seq(self.stampsTake_seqs[1])
 
         if shape == "Etoile":
@@ -195,9 +194,9 @@ class Communication:
         self.gcode = [] 
         print("Sending: '{}'".format(msg))
         
-        self.openSSH()
+        # self.openSSH()
         self.client.exec_command("echo '{}' >> /tmp/printer\n".format(msg))
-        self.closeSSH()
+        # self.closeSSH()
 
 
     # this function generate the total path, including hops and change of color/shape of stamps

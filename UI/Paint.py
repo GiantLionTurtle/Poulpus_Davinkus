@@ -87,8 +87,8 @@ class Window(QMainWindow):
         # Boutons des différentes formes
         self.side_buttons_container = QWidget()
         side_buttons_layout = QVBoxLayout()
-        #shapes = ["Carré", "Triangle", "Cercle", "Fleur", "Étoile"]
-        shapes = ["Carré", "Cercle", "Etoile"]
+        #shapes = ["Carre", "Triangle", "Cercle", "Fleur", "Étoile"]
+        shapes = ["Carre", "Cercle", "Etoile"]
         for shape in shapes:
             btn = QPushButton(shape)
             btn.setFixedSize(80, 30)
@@ -328,7 +328,7 @@ class Window(QMainWindow):
     #Ajuste la bonne forme à utiliser en fonction du choix de l'utilisateur
     def set_shape(self, shape):
         self.current_shape = shape
-        if shape == "Triangle" or "Carré":
+        if shape == "Triangle" or "Carre":
             self.current_color = QColor(Qt.GlobalColor.black)
         if shape == "Etoile":
             self.current_color = QColor(Qt.GlobalColor.yellow)
@@ -378,8 +378,8 @@ class Window(QMainWindow):
             painter.setPen(self.pen)
             painter.setBrush(QBrush(self.current_color, Qt.BrushStyle.SolidPattern))
 
-            #if self.current_shape in ["Cercle", "Carré", "Triangle", "Étoile", "Fleur"]:
-            if self.current_shape in ["Cercle", "Carré", "Etoile"]:
+            #if self.current_shape in ["Cercle", "Carre", "Triangle", "Étoile", "Fleur"]:
+            if self.current_shape in ["Cercle", "Carre", "Etoile"]:
                 x = position.x()
                 y = position.y()
                 self.shapes.append((x, y, self.current_shape, self.current_color.name()))
@@ -408,7 +408,7 @@ class Window(QMainWindow):
         shape_size = round(self._convertMm2Px([195,175], [445,400], 20))
         if shape == "Cercle":
             draw_circle(position, painter, shape_size)
-        elif shape == "Carré":
+        elif shape == "Carre":
             draw_square(position, painter, shape_size)
         elif shape == "Triangle":
             draw_triangle(position, painter, shape_size)

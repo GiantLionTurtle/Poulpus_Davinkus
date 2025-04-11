@@ -54,6 +54,11 @@ class ManipImageAdvanced:
             #Convert to HSV format
             image_hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
             self.image = image_hsv
+
+            plt.figure()
+            plt.imshow(image_hsv)
+            plt.show()
+
         except Exception as e:
             print(f"Error occured as:{e}")
 
@@ -109,9 +114,9 @@ class ManipImageAdvanced:
                 mask_white = cv.inRange(image_hsv, lower_bound, upper_bound)
                 masked_image = cv.bitwise_not(mask_white)
 
-            # plt.figure()
-            # plt.imshow(masked_image)
-            # plt.show()
+            plt.figure()
+            plt.imshow(masked_image)
+            plt.show()
 
             self.image = masked_image
         except Exception as e:
@@ -125,11 +130,11 @@ class ManipImageAdvanced:
             print(f"Number of contours: {len(contours)}")
 
             #Let us see the contours, masked image has shape == 2 just as grayscale
-            # img_bgr = cv.cvtColor(img, cv.COLOR_GRAY2RGB)
-            # cv.drawContours(img_bgr, contours, -1, (0, 0, 255), 2)
-            # plt.figure()
-            # plt.imshow(img_bgr)
-            # plt.show()
+            img_bgr = cv.cvtColor(img, cv.COLOR_GRAY2RGB)
+            cv.drawContours(img_bgr, contours, -1, (0, 0, 255), 3)
+            plt.figure()
+            plt.imshow(img_bgr)
+            plt.show()
 
             return contours
         except Exception as e:
@@ -202,12 +207,12 @@ class ManipImageAdvanced:
                 print(f"Number of contours after filtering: {len(contours_list)}")
 
             #Test if the filtering is correct
-            # img = self.image
-            # img_bgr = cv.cvtColor(img, cv.COLOR_GRAY2RGB)
-            # cv.drawContours(img_bgr, contours_list, -1, (0, 0, 255), 3)
-            # plt.figure()
-            # plt.imshow(img_bgr)
-            # plt.show()
+            img = self.image
+            img_bgr = cv.cvtColor(img, cv.COLOR_GRAY2RGB)
+            cv.drawContours(img_bgr, contours_list, -1, (0, 0, 255), 3)
+            plt.figure()
+            plt.imshow(img_bgr)
+            plt.show()
             return contours_list
         except Exception as e:
             print(f"Error occured trying to filter the contours:{e}")

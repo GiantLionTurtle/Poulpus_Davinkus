@@ -10,6 +10,7 @@ import os
 from typing import List, Dict
 import itertools
 import array as arr
+import math
 
 class ManipImageAdvanced:
     def __init__(self, pixmap=None, file_path=None):
@@ -311,7 +312,7 @@ class ManipImageAdvanced:
             #Test if contours reassemble correctly
             img = self.image
             img_bgr = cv.cvtColor(img, cv.COLOR_GRAY2RGB)
-            cv.drawContours(img_bgr, merged_contours[3], -1, (0, 0, 255), 3)
+            cv.drawContours(img_bgr, merged_contours, -1, (0, 0, 255), 3)
             plt.figure()
             plt.imshow(img_bgr)
             plt.show()
@@ -336,6 +337,7 @@ class ManipImageAdvanced:
         except Exception as e:
             print("Error occured while trying to convert the measurement from mm to px: {e}")
     
+    
     def placeCircles(self, contours, circle_diameter, min_spacing):
         try:
             #Initialize list of circle centers
@@ -343,99 +345,65 @@ class ManipImageAdvanced:
             gcode_list = []
 
             #Convert the circle radius in mm to px
-            circle_stamp_radius = self._convertMm2Px([195,175], [600,400], circle_diameter)/2
-
-            #Determine the minimum distance between the circle centers, in px
-            min_distance = round(circle_stamp_radius + min_spacing, None)
-
-            coverage_mask = np.zeros_like(self.image)
-            for i,contour in enumerate(contours):
-                # Create a blank binary mask for the current contour
-                contour_mask = np.zeros_like(self.image)
-                #Pour faire des cercles sur les contours
-                cv.drawContours(contour_mask, [contour], -1, 255, thickness=cv.FILLED)
-
-                # Grid sampling on the mask
-                height, width = contour_mask.shape
-                for y in range(0, height, min_distance):
-                    for x in range(0, width, min_distance):
-                        #Pour les contours
-                        if not np.any(contour_mask[y:y+min_distance, x:x+min_distance]):
-                            continue
-                        if np.any(coverage_mask[x:x+min_distance, y:y+min_distance]):
-                            continue
-                        #Le -5 pour creer un effet de superposition
-                        center = (round(x), round(y))
-                        circles_data.append(center)
-
-                        x_center = round(x + circle_stamp_radius)
-                        y_center = round(y + circle_stamp_radius)
-                        circle_shape = 'Cercle'
-                        circle_color = '#ff0000'
-                        gcode_list.append((x_center,y_center,circle_shape,circle_color))
-                        
-                        cv.circle(coverage_mask, center, round(circle_stamp_radius), 255, cv.FILLED)
-
-            self.circles = circles_data
-
-            self.draw_circles([400,600],'white')
-
-            #return self.AnalysisData(circles=circles_data,circles_shape=circles_shape_list, circles_color=circles_color_list)
-            return gcode_list
-        
-        except Exception as e:
-            print(f"Error occured trying to fill contours with stamps:{e}")
-    
-    def testPlaceCircles(self, contours, circle_diameter, min_spacing):
-        try:
-            #Initialize list of circle centers
-            circles_data = []
-            gcode_list = []
-
-            #Convert the circle radius in mm to px
-            circle_stamp_radius = self._convertMm2Px([195,175], [600,400], circle_diameter)/2
+            circle_stamp_radius = round(self._convertMm2Px([195,175], [445,400], circle_diameter)/2)
 
             #Determine the minimum distance between the circle centers, in px
             min_distance = round(circle_stamp_radius + min_spacing, None)
 
             #Go through each contour in the list of all contours reassembled
+            i=0
             for contour in contours:
+                #print(f"Index du contour:{i}")
                 #Go through all coordinates for a contour
                 for val in contour:
                     x = val[0,0]
+                    #print(f"X:{x}")
                     y = val[0,1]
-                    #Can change the value added to x and y if want to cover more ground
-                    if self._isValueAlreadyPresent(x,min_distance,circles_data) or self._isValueAlreadyPresent(y,30,circles_data):
+                    #print(f"Y:{y}")
+                    if x+circle_stamp_radius >= 400:
+                        x = 400 - circle_stamp_radius
+                    if x-circle_stamp_radius <=0:
+                        x = circle_stamp_radius
+                    if y+circle_stamp_radius >= 445:
+                        y = 445-circle_stamp_radius
+                    if y-circle_stamp_radius <= 0:
+                        y = circle_stamp_radius
+                    #Can change the second argument if want less circles
+                    if self._isValueAlreadyPresent(x,y,min_spacing,circles_data):
                         continue
                     center = (x,y)
                     circles_data.append(center)
 
-                    x_center = round(x)
-                    y_center = round(y)
+                    x_center = x
+                    y_center = y
                     circle_shape = 'Cercle'
                     circle_color = 'Rouge'
                     gcode_list.append((x_center,y_center,circle_shape,circle_color))
-            
+
+                i = i+1
             self.circles = circles_data
-            self.draw_circles([400,600],'white')
+            self.draw_circles([400,445],'white')
 
             return gcode_list
 
         except Exception as e:
             print(f"Error occured trying to place circles: {e}")
 
-    def _isValueAlreadyPresent(self,value,value_look_around,list):
+    def _isValueAlreadyPresent(self,value_x, value_y,value_look_around,list):
         try:
             for point in list:
-                if point[0] == value:
+                #print(f"X dans fct:{point[0]}")
+                # temp = value_look_around
+                # while temp >= -value_look_around:
+                #     if point[0] - temp == value_x:
+                #         return True
+                #     if point[1] - temp == value_y:
+                #         return True
+                #     temp = temp-1
+                norme = (value_x-point[0])**2 + (value_y-point[1])**2
+                print(f"Valeur de Max:{norme}")
+                if (norme <= value_look_around**2):
                     return True
-                if point[1] == value:
-                    return True
-                i = value_look_around
-                while i > -value_look_around:
-                    if point[0] - i == value:
-                        return True
-                    i = i-1
             return False
         except Exception as e:
             print(f"Error occured while trying to find if the value is already present: {e}")
@@ -443,7 +411,7 @@ class ManipImageAdvanced:
     def draw_circles(self, image_size, background, ):
         output_image = Image.new("RGB", image_size, background)
         draw = ImageDraw.Draw(output_image)
-        circle_radius = self._convertMm2Px([195,175], [600,400], 20.0)/2
+        circle_radius = self._convertMm2Px([195,175], [445,400], 20.0)/2
 
         for x, y in self.circles:
             draw.ellipse(

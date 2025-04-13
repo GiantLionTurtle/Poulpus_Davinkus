@@ -6,7 +6,6 @@ import sys
 import os
 from Uploader import Uploader
 from manip_image_advanced import ManipImageAdvanced
-from manip_image_simple import ManipImage
 from Shapes import draw_circle, draw_splatter, draw_square, draw_star, draw_triangle
 from Colors import ColorPicker
 from Canvas import Canvas
@@ -221,10 +220,9 @@ class Window(QMainWindow):
         cv_img.applyMaskOnImage()
         contours = cv_img.findContours()
         new_contours = cv_img.contourFiltering(contours)
-        final_contours = cv_img.reassembleContours(new_contours)
-        coordinates = cv_img.placeCircles(final_contours, 20.0, 25.0)
-        self.shapes = coordinates
-        self.communication.gcode_logic(coordinates)
+        coordinates = cv_img.placeCircles(new_contours, 20.0, 25.0)
+        #self.shapes = coordinates
+        #self.communication.gcode_logic(coordinates)
         
         print("Analysis completed, outputs saved.")
 

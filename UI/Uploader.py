@@ -1,7 +1,6 @@
 from PyQt6.QtWidgets import QPushButton, QFileDialog, QLabel
 from PyQt6.QtGui import QPixmap, QImage, QPainter
 from PyQt6.QtCore import Qt
-from manip_image_simple import ManipImage
 import cv2 as cv
 class Uploader:
     def __init__(self, image_label):

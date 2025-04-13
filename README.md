@@ -1,3 +1,6 @@
+
+![logo de poulpus davinkus](https://github.com/GiantLionTurtle/Poulpus_Davinkus/blob/main/Poulpus%20Davinkus.jpg)
+
 # Poulpus_Davinkus
 
 Poulpus Davinkus est un projet de robot delta convergent ayant la capacité de reproduire des dessins et images à l'aide d'une sélection d'étampes et de couleurs.

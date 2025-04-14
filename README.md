@@ -80,18 +80,7 @@ Les pièces à fabriquer sont les suivantes
 * Joints sphériques liés avec du JB-weld x12
     * Bille d'acier 1/2"
     * Vis M3x10
-* CornerLink.stl [impression 3d] x3
-* Chariot.stl [impression 3d] x3
-* TensionnerCap.stl [impresion 3d] x6
-* TensionnerChariot.stl [impression 3d] x6
-* TensionnerGuide.stl [impression 3d] x6
-* PointePyramide.stl [impression 3d] x1
-* ShaftChariot.stl [impression 3d] x12
-* PneuChariot.stl [impression 3d] x12
-* DessusSuccion.svg [découpe laser] x1
-* Cote1succion.svg [découpe laser] x2
-* Cote2succion.svg [découpe laser] x2
-* DessousSuccion.svg [découpe laser] x1
+* Pièces imprimées
 
 Quincaillerie
 * Écrous M3 (6x tensionneurs; 12x assemblage chariots 6x fixation de la pointe; 9x fixation de cornerlink au plafond) x35

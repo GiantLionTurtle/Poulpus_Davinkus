@@ -1,5 +1,2 @@
 # CAD
-
-Folder containing mechanical parts 
-
-## Assembly instructions
+Toutes les pièces et assemblages du robot

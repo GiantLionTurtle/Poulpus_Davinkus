@@ -22,11 +22,11 @@ class Communication:
     def __init__(self, window = None):
 
         self.window = window
-        self.hop = 40 #hop height constant in millimeter
+        self.hop = 40 #hauteur de hop en mm
         self.flowRate = 9000 
         self.pageSizeMm = [175, 195]
-        self.pageSizePix = [400, 445] # NEEDS TO BE CHANGED
-        self.pageHeight = 72  #height in the Z axis to stamp
+        self.pageSizePix = [400, 445] # Dimensions de la page virtuelle en pixels
+        self.pageHeight = 72  #hauteur de la page dans l'environnement du robot
         self.gcode = []
         self.currentColor = None
         self.currentShape = None
@@ -95,6 +95,7 @@ class Communication:
         return PositionMeters
     
     def rotate_matrix(self,x,y,z):
+        # Matrice de rotation vers le référentiel du robot
         x = -(x+20 - (self.pageSizeMm[0])/2)
         y = self.pageSizeMm[1] - (y+50) - (self.pageSizeMm[1])/2
         angle = -np.pi/6
@@ -112,11 +113,11 @@ class Communication:
         return out
 
     def position_to_gcode(self, X, Y, Z):  #Positions en pixels sauf Z, le changement d'unites ce fera ici
-
+        # Transforme une position à aller vers une position en gcode à aller par un mouvement linéaire
         self.gcode.append(f"G1 X{X:.2f} Y{Y:.2f} Z{Z:.2f} F{self.flowRate}\n")
 
     def go_home(self):
-
+        #Ajoute une ligne de gcode qui envoie le robot à sa position home (Interrupteurs de fin de course)
         self.gcode.append(f"G28\n")
     
     def stamp_path(self, x, y):
@@ -131,8 +132,8 @@ class Communication:
 
         # self.position_to_gcode(self.homeNotHome[0],self.homeNotHome[1],self.homeNotHome[2])
 
-        #Sequences needs to be tested to find out the correct offsets and the correct Stamp positions
-        #Put the stamp in the rack
+        
+        #Séquence pour mettre l'étampe dans le socle
         if self.currentShape == "Cercle":
             self.send_seq(self.stampsDrop_seqs[3])
             
@@ -142,7 +143,7 @@ class Communication:
         if self.currentShape == "Etoile":
             self.send_seq(self.stampsDrop_seqs[2])
  
-        #Take the next stamp
+        #Séquence pour prendre une étampe du socle
         if shape == "Cercle":
             self.send_seq(self.stampsTake_seqs[3])
 
@@ -160,7 +161,8 @@ class Communication:
             self.position_to_gcode(elem[0], elem[1], elem[2])
 
     def ink_stamp(self,color):
-        #Set slower flow rate to avoid big Splash
+        # Cette fonction gère la séquence de mouvements pour ressourcer l'étampe à envoyer
+        #Réduit le feedrate de moitié afin d'éviter une éclaboussure
         normalFr = self.flowRate
         
         pool_index = 0
@@ -185,6 +187,7 @@ class Communication:
         return 
     
     def send_Gcode(self):
+        # Envoie la séquence de mouvements en gcode par port SSH au Raspberry pi
         msg = ""
         k = 0
         for i in self.gcode:
@@ -201,6 +204,7 @@ class Communication:
 
     # this function generate the total path, including hops and change of color/shape of stamps
     def gcode_logic(self, positions): #positions is one or n positions
+        #Logique qui gère la séquence complète de mouvements qui sera envoyé au Pi.
         
         self.go_home()
         stamp_counter = 0

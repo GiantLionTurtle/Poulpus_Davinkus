@@ -45,7 +45,7 @@ Le Raspberry Pi 5 est alimenté par un fil usb-c modifié et alimente la carte A
 
 ## Microcode
 
-Le microcode de l'imprimante à étampe est une version modifiée de Klipper qui supporte notre model cinématique de delta convergent. Elle peut être trouvée comme sous-module dans kinematics/
+Le microcode de l'imprimante à étampe est une version modifiée de Klipper qui supporte notre model cinématique de delta convergent. Elle peut être trouvée comme sous-module dans kinematics/ ou à https://github.com/GiantLionTurtle/klipper_convergentDelta
 
 Dans kinematics/ se trouve aussi le fichier konfig.cfg qui est le fichier de configuration à donner à Klipper pour que le robot fonctionne comme prévu.
 
